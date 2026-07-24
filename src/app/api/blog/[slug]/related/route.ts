@@ -1,9 +1,13 @@
 import { db } from '@/lib/db'
-import { apiResponse, apiError } from '@/lib/api-utils'
+import { apiResponse, apiError, applyRateLimit } from '@/lib/api-utils'
+import { apiLimiter } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/errors'
 
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
+    const rateCheck = await applyRateLimit(apiLimiter, request)
+    if (rateCheck) return rateCheck
+
     const { slug } = await params
     const { searchParams } = new URL(request.url)
     const limit = Math.min(10, Math.max(1, parseInt(searchParams.get('limit') || '3')))

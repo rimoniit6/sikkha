@@ -209,8 +209,7 @@ export async function PUT(
 
     return NextResponse.json({ success: true, data: { message: 'CQ আপডেট হয়েছে', cq } })
   } catch (error) {
-    console.error('Update CQ error:', error)
-    return apiError('CQ আপডেট করতে সমস্যা হয়েছে', 500)
+    return handleApiError(error, 'Update CQ error')
   }
 }
 
@@ -241,7 +240,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, data: { message: 'CQ সফলভাবে মুছে ফেলা হয়েছে' } })
   } catch (error) {
-    console.error('Delete CQ error:', error)
-    return apiError('CQ মুছে ফেলতে সমস্যা হয়েছে', 500)
+    return handleApiError(error, 'Delete CQ error')
   }
 }

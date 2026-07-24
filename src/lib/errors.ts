@@ -154,10 +154,12 @@ function formatError(error: unknown): { message: string; statusCode: number; cod
   }
 
   if (error instanceof Prisma.PrismaClientValidationError) {
+    const isDev = process.env.NODE_ENV === 'development'
     return {
       message: 'ডাটাবেস ভ্যালিডেশন ত্রুটি।',
       statusCode: 400,
       code: 'DB_VALIDATION_ERROR',
+      ...(isDev && { details: error.message }),
     }
   }
 
@@ -202,6 +204,9 @@ export function logError(error: unknown, context?: string): void {
     logger.error(errorInfo.message, error, { context: context || 'api' })
   } else if (errorInfo.statusCode >= 400) {
     logger.warn(`${errorInfo.code}: ${errorInfo.message}`, { context: context || 'api' })
+    if (process.env.NODE_ENV === 'development' && error instanceof Error) {
+      console.error(`[logError:${errorInfo.code}]`, error)
+    }
   }
 }
 

@@ -63,9 +63,6 @@ export async function GET(
       data: subject,
     })
   } catch (error) {
-    return handleApiError(error, '[/api/subjects/slug] Error:')
-      { error: 'সার্ভার ত্রুটি' },
-      { status: 500 }
-    )
+    return handleApiError(error, '[/api/subjects/slug] Error')
   }
 }

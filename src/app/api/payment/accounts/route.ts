@@ -41,14 +41,5 @@ export async function GET() {
     return NextResponse.json({ success: true, data: { accounts } })
   } catch (error) {
     return handleApiError(error, 'Get payment accounts error:')
-      success: true,
-      data: {
-        accounts: {
-          bkash: '',
-          nagad: '',
-          rocket: '',
-        },
-      },
-    })
   }
 }

@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20', 10)
     const skip = (page - 1) * limit
 
-    const where: Record<string, unknown> = {}
+    const where: Record<string, unknown> = { deletedAt: null }
     if (examId) where.examId = examId
     if (userId) where.userId = userId
 
@@ -38,19 +38,20 @@ export async function GET(request: NextRequest) {
     ])
 
     // Stats summary — use database aggregation instead of fetching all rows
-    // Use raw SQL for avg percentage score (can't express division in Prisma aggregate)
-    const whereClauses: string[] = []
+    // Use raw SQL for avg/max percentage score (can't express division in Prisma aggregate)
+    // Filter out soft-deleted records (deletedAt IS NULL) and incomplete attempts (score > 0)
+    const whereClauses: string[] = ['"deletedAt" IS NULL']
     const params: unknown[] = []
     let paramIndex = 1
     if (examId) { whereClauses.push(`"examId" = $${paramIndex++}`); params.push(examId) }
     if (userId) { whereClauses.push(`"userId" = $${paramIndex++}`); params.push(userId) }
-    const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : ''
+    const whereSql = `WHERE ${whereClauses.join(' AND ')}`
 
     const [stats] = await db.$queryRawUnsafe<Array<{ avgScore: number | null; avgTime: number | null; highestScore: number | null }>>(
       `SELECT
         AVG(score * 100.0 / NULLIF("totalMarks", 0)) AS "avgScore",
         AVG("timeTaken") AS "avgTime",
-        MAX(score) AS "highestScore"
+        MAX(score * 100.0 / NULLIF("totalMarks", 0)) AS "highestScore"
       FROM "ExamResult" ${whereSql}`,
       ...params
     )

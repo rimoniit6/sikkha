@@ -2,7 +2,6 @@ import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { handleApiError } from '@/lib/errors'
 import {
-  FEATURED_CONTENT_REGISTRY,
   getFeaturedRegistration,
   batchResolveFeaturedContent,
 } from '@/lib/featured-content-registry'
@@ -77,9 +76,6 @@ export async function GET() {
 
     return NextResponse.json({ success: true, data: { items } })
   } catch (error) {
-    return handleApiError(error, 'Get featured content error:')
-      { error: 'ফিচার্ড কন্টেন্ট আনতে সমস্যা হয়েছে' },
-      { status: 500 }
-    )
+    return handleApiError(error, 'Get featured content error')
   }
 }

@@ -57,14 +57,16 @@ function parseHeadings(html: string): TocItem[] {
 }
 
 interface TableOfContentsProps {
-  content: string // Raw HTML content to parse headings from
+  content?: string // Raw HTML content to parse headings from
+  headings?: TocItem[] // Pre-extracted headings (e.g. from content blocks)
 }
 
-export default function TableOfContents({ content }: TableOfContentsProps) {
-  const [activeId, setActiveId] = useState<string>('')
+export default function TableOfContents({ content, headings: externalHeadings }: TableOfContentsProps) {
+  const [activeId, setActiveId] = useState('')
   const [isOpen, setIsOpen] = useState(false)
 
-  const headings = useMemo(() => parseHeadings(content), [content])
+  const parsedHeadings = useMemo(() => content ? parseHeadings(content) : [], [content])
+  const headings = externalHeadings ?? parsedHeadings
 
   // Track active heading via IntersectionObserver
   useEffect(() => {

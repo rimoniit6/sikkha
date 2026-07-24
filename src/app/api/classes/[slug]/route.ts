@@ -130,9 +130,6 @@ export async function GET(
 
     return NextResponse.json(result)
   } catch (error) {
-    return handleApiError(error, 'Get class detail error:')
-      { error: 'ক্লাসের বিস্তারিত তথ্য আনতে সমস্যা হয়েছে' },
-      { status: 500 }
-    )
+    return handleApiError(error, 'Get class detail error')
   }
 }

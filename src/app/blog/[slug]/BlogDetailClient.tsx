@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb'
 import { Badge } from '@/components/ui/badge'
@@ -8,12 +8,20 @@ import { Card } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
-import { Home, Calendar, User, Clock, Eye, ArrowRight, ArrowLeft, Share2, Check, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Home, Calendar, User, Clock, Eye, ArrowRight, Share2, Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import RichContentRenderer from '@/components/ui/rich-content-renderer'
 import { useImageViewer } from '@/providers/ImageViewerProvider'
 import TableOfContents from '@/components/ui/table-of-contents'
+import { deserializeBlogBlocks } from '@/features/blog/blocks/blog-block-serializer'
+import { headingsFromBlogBlocks } from '@/features/blog/blocks/blog-block-utils'
 import type { BlogPostRecord } from '@/features/blog/types/blog'
+
+const BlogBlockEditor = dynamic(
+  () => import('@/features/blog/blocks/BlogBlockEditor').then(m => ({ default: m.default })),
+  { ssr: false }
+)
 
 interface Props {
   post: BlogPostRecord
@@ -28,6 +36,17 @@ export default function BlogDetailClient({ post, relatedPosts, prevPost, nextPos
   const [readingProgress, setReadingProgress] = useState(0)
 
   const contentRef = useRef<HTMLDivElement>(null)
+
+  // Deserialize content blocks (supports both JSON blocks and legacy HTML)
+  const blocks = useMemo(() => {
+    const postWithBlocks = post as typeof post & { contentBlocks?: string }
+    if (postWithBlocks.contentBlocks) {
+      try { return JSON.parse(postWithBlocks.contentBlocks) } catch { /* fall through */ }
+    }
+    return deserializeBlogBlocks(post.content)
+  }, [post])
+
+  const tocHeadings = useMemo(() => headingsFromBlogBlocks(blocks), [blocks])
 
   // Image click delegation for lightbox
   useEffect(() => {
@@ -65,7 +84,7 @@ export default function BlogDetailClient({ post, relatedPosts, prevPost, nextPos
         heading.id = id
       }
     })
-  }, [post.content])
+  }, [blocks])
 
   // Reading progress bar
   useEffect(() => {
@@ -129,9 +148,9 @@ export default function BlogDetailClient({ post, relatedPosts, prevPost, nextPos
                 className="object-cover"
                 loading="lazy"
                 sizes="(max-width: 768px) 100vw, 800px"
-              />    </div>
-  )
-}
+              />
+            </div>
+          )}
 
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -238,25 +257,29 @@ export default function BlogDetailClient({ post, relatedPosts, prevPost, nextPos
 
             <Separator className="mb-8" />
 
-            {/* Rich Content — uses shared renderer for KaTeX, captions, math, alignment */}
+            {/* Content blocks — rendered via BlogBlockEditor in preview mode */}
             <div
               ref={contentRef}
               className="prose prose-lg dark:prose-invert max-w-none blog-content"
               style={{ cursor: 'zoom-in' }}
             >
-              <RichContentRenderer content={post.content} />
+              {blocks.length > 0 && blocks[0].id ? (
+                <BlogBlockEditor blocks={blocks} onChange={() => {}} previewMode />
+              ) : (
+                <RichContentRenderer content={post.content} />
+              )}
             </div>
           </div>
         </article>
 
         {/* Table of Contents (desktop sidebar) */}
         <div className="hidden lg:block w-56 shrink-0">
-          <TableOfContents content={post.content} />
+          <TableOfContents headings={tocHeadings} />
         </div>
 
         {/* Mobile TOC (floating button) */}
         <div className="lg:hidden">
-          <TableOfContents content={post.content} />
+          <TableOfContents headings={tocHeadings} />
         </div>
       </div>
 

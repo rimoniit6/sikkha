@@ -1,113 +1,179 @@
 # Architecture
 
-## Overview
-
-শিক্ষা বাংলা (Sikkha) is a Next.js 16 App Router application serving a Bangladeshi online learning platform. It uses a hybrid SPA-in-SSR architectural pattern where most page transitions happen client-side via a Zustand-based virtual router, while SEO-critical pages use server-side rendering.
+> Complete technical architecture of শিক্ষা বাংলা.
 
 ## High-Level Architecture
 
 ```
-Client Browser
-    |
-    |-- CDN (Vercel Edge)
-    |
-    v
-Next.js App Router (Node.js)
-    |
-    |-- [...slug] SPA Router (client-side)
-    |-- /admin/* (admin panel)
-    |-- /api/* (85+ REST endpoints)
-    |
-    v
-Services Layer
-    |-- Server Services (PurchaseService, ContentService)
-    |-- Client API Services (courseService, bookmarkService)
-    |
-    v
-Lib Layer
-    |-- Database (Prisma + PostgreSQL)
-    |-- Auth (Supabase)
-    |-- Validation (Zod)
-    |-- Error Handling
-    |-- Rate Limiting (Upstash Redis)
-    |-- Cache Mgmt
-    |
-    v
-External Services
-    |-- Supabase Auth
-    |-- Upstash Redis
-    |-- UploadThing
-    |-- Sentry
+┌─────────────────────────────────────────────────────────┐
+│                      CLIENT (React 19)                   │
+│  Zustand Router ←→ React Query ←→ Components            │
+│  Learning Preference Provider (GLOBAL/CLASS_BASED)       │
+└──────────────────────┬──────────────────────────────────┘
+                       │ HTTP
+┌──────────────────────▼──────────────────────────────────┐
+│                   PROXY LAYER (proxy.ts)                 │
+│  JWT Auth → CSRF → Rate Limit → Security Headers        │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────┐
+│              NEXT.JS API ROUTES (211 endpoints)          │
+│  Auth Guards → Validation → Business Logic → Response    │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+┌──────────────────────▼──────────────────────────────────┐
+│              PRISMA ORM → SQLite (LibSQL adapter)        │
+│  Soft Delete Middleware → HTML Sanitization              │
+└─────────────────────────────────────────────────────────┘
 ```
 
-## Key Architectural Decisions
+## UI Layer
 
-### SPA-in-SSR Pattern
-The app uses a catch-all `[...slug]` route that loads a client-side SPA router. This provides app-like navigation while maintaining SEO for initial page loads. Actual Next.js routes exist for:
-- SEO-critical pages (/, /classes, /login, /register)
-- API routes
-- Admin panel
-- Exam flow pages
+### Routing
+
+The app uses a **SPA-in-SSR** pattern. A single `page.tsx` entry point renders all client-side pages via a Zustand-based router with URL synchronization.
+
+```
+URL Change → RouteSync (reads URL) → Zustand Store → Component Render
+User Click → Zustand Store → AppNavigationBridge → router.push() → URL Update
+```
+
+Route definitions are in `src/store/router.ts` (50+ routes). URL mapping is in `src/lib/urls.ts`.
 
 ### State Management
-- **Zustand**: Client state (auth, router, filters, exam session)
-- **React Query**: Server state (data fetching, caching, mutations)
-- **URL State**: Route params store navigation state
 
-### Authentication
-- Supabase Auth with httpOnly cookies
-- Custom User table in PostgreSQL for business logic
-- Service role client for admin operations
-- Permission-based RBAC
+| Store | Purpose | Persistence |
+|-------|---------|-------------|
+| `auth.ts` | User session, login/logout | localStorage (`edu-auth`) |
+| `router.ts` | Current route, params, history | In-memory |
+| `exam.ts` | Active exam session | In-memory |
+| `analytics.ts` | Admin analytics filters | In-memory |
 
-### Content Access Control
-Complex multi-level access resolution:
-1. Active subscription checks
-2. Direct payment verification
-3. Bundle purchase checks
-4. Content-type cross-matching (board-mcq -> mcq)
+### Provider Hierarchy
 
-## Data Flow
+```
+RootLayout
+  ThemeProvider (next-themes)
+    QueryProvider (TanStack React Query, dehydrated state)
+      AuthProvider (JWT session)
+        LearningPreferenceProvider (GLOBAL/CLASS_BASED)
+          LoadingProvider (route transition loader)
+            RouteSync (URL state sync)
+            AppNavigationBridge (SPA navigation bridge)
+            {children} (page content)
+```
 
-### Page Navigation Flow
-1. User clicks link -> useAppNavigation.navigate()
-2. RouterStore updates state + pushes URL via Next.js router
-3. [...slug]/page.tsx reads route from URL params
-4. Client components render based on currentRoute
+## API Layer
 
-### API Request Flow
-1. Client -> api-client.ts (retry, timeout, CSRF)
-2. Middleware -> auth check, rate limiting
-3. Route handler -> validation, business logic
-4. Response -> standardized { success, data, error, code }
+### Request Flow
 
-## Database Schema (45 Models)
+```
+HTTP Request
+  → proxy.ts (JWT auth, CSRF, rate limit, security headers)
+  → Next.js API Route
+    → withAdmin/verifyAuth (authentication)
+    → withCsrf (CSRF validation)
+    → applyRateLimit (rate limiting)
+    → validateBody (Zod validation)
+    → Business Logic
+    → apiResponse/apiError (standardized response)
+  → handleApiError (error classification)
+```
 
-### Core Content Hierarchy
-- ClassCategory -> Subject -> Chapter -> Topic
+### Standardized Response Format
 
-### Content Types
-- Lecture, MCQ, CQ, KnowledgeQuestion
+Success:
+```json
+{ "success": true, "data": { ... }, "pagination": { ... } }
+```
 
-### Exam Systems
-- Custom exams (Exam + ExamQuestion + ExamResult)
-- MCQ Exam Packages (MCQExamPackage -> MCQExamSet -> ...)
-- CQ Exam Packages (CQExamPackage -> CQExamSet -> ...)
+Error:
+```json
+{ "success": false, "error": "Error message in Bangla", "code": "ERROR_CODE" }
+```
 
-### Commerce
-- Payment (bkash/nagad/rocket)
-- ContentPackage + UserSubscription
-- ContentBundle + BundleItem
-- Course + CourseEnrollment + CoursePurchase
+## Service Layer
 
-### Analytics
-- AnalyticsEvent, AnalyticsSession, AnalyticsSearchQuery
-- AnalyticsAlert, AnalyticsReport
+Business logic is split between:
 
-## Security Architecture
+- **API Routes** — Request handling, validation, response formatting
+- **`src/lib/`** — Shared utilities (auth, errors, validation, payments)
+- **`src/services/server/`** — Server-side services (content resolution, purchases)
 
-See SECURITY.md for detailed security architecture.
+## Prisma Layer
 
-## Performance Architecture
+### Client Configuration
 
-See PERFORMANCE.md for detailed performance optimizations.
+- Singleton pattern via `globalThis` in development
+- LibSQL adapter for SQLite
+- Soft delete middleware (auto-filters deleted records)
+- HTML sanitization middleware (DOMPurify on write)
+
+### Transaction Safety
+
+```typescript
+import { safeTransaction } from '@/lib/errors'
+
+await safeTransaction(async (tx) => {
+  // All operations use tx, NEVER db
+  await tx.payment.update({ ... })
+  await tx.userSubscription.create({ ... })
+})
+```
+
+## Authentication
+
+### Flow
+
+```
+Login → POST /api/auth/login → Verify credentials → Sign JWT → Set HttpOnly cookie
+Request → proxy.ts → Parse cookie → Verify JWT → Fetch user → Attach to request
+```
+
+- JWT via `jose` library (HS256, 7-day expiry)
+- HttpOnly, Secure, SameSite=Strict cookies
+- Session verified on every request via `proxy.ts`
+
+## Authorization
+
+| Guard | Usage |
+|-------|-------|
+| `verifyAuth(request)` | Check authentication |
+| `withAdmin(request)` | Require ADMIN + rate limiting |
+| `withSuperAdmin(request)` | Require SUPER_ADMIN |
+| `requirePermission(request, perm)` | Require specific permission |
+| `withCsrf(request)` | Validate CSRF token |
+
+## Caching
+
+| Layer | Strategy |
+|-------|----------|
+| React Query | Client-side cache with server dehydration |
+| HTTP | Static assets: 1-year immutable; API: no-store |
+| Database | In-memory cache with TTL (content types, CSRF) |
+
+## Premium Access
+
+Access is resolved in this order:
+1. Active subscription (by class level)
+2. Dedicated purchase (exam packages)
+3. Course-granted access
+4. Direct payment
+5. Bundle ownership
+6. Package subscription
+
+## Payment Flow
+
+```
+User clicks Buy → Payment Page → Select Method → Enter Transaction ID → Submit
+POST /api/payment → Validate → Create Payment (PENDING) → Notify Admin
+Admin reviews → Approve/Reject → DB Transaction (atomic)
+Create Subscription/Purchase → Notify User → Audit Log
+```
+
+## Audit Logging
+
+- `AuditLog` model captures all admin mutations
+- Records: action, entityType, entityId, oldData, newData, adminId, IP, userAgent
+- Immutable (append-only)
+- Created inside transactions for atomicity

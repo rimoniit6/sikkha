@@ -137,9 +137,6 @@ export async function GET(
 
     return NextResponse.json(result)
   } catch (error) {
-    return handleApiError(error, 'Get chapter detail error:')
-      { error: 'অধ্যায়ের বিস্তারিত তথ্য আনতে সমস্যা হয়েছে' },
-      { status: 500 }
-    )
+    return handleApiError(error, 'Get chapter detail error')
   }
 }

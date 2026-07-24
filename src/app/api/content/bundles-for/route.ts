@@ -179,9 +179,6 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (error) {
-    return handleApiError(error, 'Bundles-for content error:')
-      { error: 'বান্ডেল তথ্য লোড করতে সমস্যা হয়েছে' },
-      { status: 500 }
-    )
+    return handleApiError(error, 'Bundles-for content error')
   }
 }

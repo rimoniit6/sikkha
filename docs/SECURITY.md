@@ -1,79 +1,78 @@
-# Security Architecture
+# Security
+
+> Security documentation for শিক্ষা বাংলা.
 
 ## Authentication
 
-- **Provider**: Supabase Auth with httpOnly cookies
-- **Session**: Managed via `@supabase/ssr` with cookie-based sessions
-- **Middleware**: Session refresh on every request via `updateSession()`
-- **Service Role**: `SUPABASE_SERVICE_ROLE_KEY` for admin operations (server-only)
+### JWT Implementation
+- **Library**: `jose` (Web Crypto API compatible)
+- **Algorithm**: HS256
+- **Expiry**: 7 days
+- **Cookie**: HttpOnly, Secure (production), SameSite=Strict
+- **Secret**: `JWT_SECRET` env var (32+ characters)
+
+### Flow
+```
+Login → Verify credentials → Sign JWT → Set HttpOnly cookie
+Request → proxy.ts → Parse cookie → Verify JWT → Fetch user → Attach to request
+```
 
 ## Authorization
 
-### Role-Based Access Control (RBAC)
-- Three roles: `SUPER_ADMIN`, `ADMIN`, `STUDENT`
-- Permission system with named permissions (e.g., `"payment.approve"`)
-- In-memory permission cache with 60s TTL
-- SUPER_ADMIN bypasses all permission checks
+### Roles
+| Role | Access |
+|------|--------|
+| `STUDENT` | Free content, premium (if purchased), exams |
+| `ADMIN` | Full CRUD on all content, payment approval |
+| `SUPER_ADMIN` | System settings, database operations |
 
-### Content Access Control
-- Multi-level resolution: subscription -> direct payment -> bundle purchase
-- Type-cross-matching (board-mcq inherits mcq access)
-- Pending payment detection
+### Guards
+- `verifyAuth(request)` — Check authentication
+- `withAdmin(request)` — Require ADMIN + rate limiting
+- `withSuperAdmin(request)` — Require SUPER_ADMIN
+- `requirePermission(request, perm)` — Require specific permission
+- `withCsrf(request)` — Validate CSRF token
 
-## Request Security
+## CSRF Protection
 
-### CSRF Protection
-- JWT-based CSRF tokens (jose library, HS256)
-- Cookie-stored token (`csrf_token`, httpOnly)
-- Header-based verification (`x-csrf-token`)
-- Form data fallback for non-JSON requests
-- 1-hour token expiry
+- JWT-based tokens signed with `CSRF_SECRET`
+- Validated on all POST/PUT/PATCH/DELETE via `withCsrf()`
+- Token sent via `x-csrf-token` header or `_csrf` body field
+- Auto-skips GET/HEAD requests
 
-### Rate Limiting
-- Upstash Redis sliding window implementation
-- Three limit tiers: API (60/min), Upload (10/min), Auth (10/15min)
-- Dynamic limits configurable via SiteSetting table
-- Client identification via IP headers (CF, Vercel, X-Forwarded-For)
-- Rate limit headers returned on limit exceeded
+## Rate Limiting
 
-### Security Headers
-Configured in `next.config.ts`:
-- `Strict-Transport-Security`: 1 year, includeSubDomains, preload
-- `X-Content-Type-Options`: nosniff
-- `X-Frame-Options`: DENY
-- `X-XSS-Protection`: 1; mode=block
-- `Referrer-Policy`: strict-origin-when-cross-origin
-- `Permissions-Policy`: Restricted camera, microphone, geolocation
-- `Content-Security-Policy`: Strict CSP with allowed origins
+- Upstash Redis-backed rate limiter
+- Applied to: auth endpoints, API endpoints, admin mutations
+- `withAdmin()` auto-applies rate limiting for non-GET requests
 
-### Content Security Policy
-```
-default-src 'self'
-script-src 'self' 'unsafe-inline' 'unsafe-eval' *.supabase.co *.uploadthing.com utfs.io *.sentry.io
-style-src 'self' 'unsafe-inline' fonts.googleapis.com
-img-src 'self' data: blob: https:
-font-src 'self' fonts.gstatic.com data:
-connect-src 'self' *.supabase.co *.uploadthing.com utfs.io *.sentry.io *.upstash.io wss://*.supabase.co
-frame-src 'self' *.supabase.co
-object-src 'none'
-base-uri 'self'
-form-action 'self'
-frame-ancestors 'none'
+## Input Sanitization
+
+- DOMPurify strips scripts/event handlers from HTML at Prisma middleware layer
+- Zod validation on all mutation inputs
+- SQL injection prevented by Prisma ORM
+
+## Security Headers
+
+Set in `next.config.ts` and `proxy.ts`:
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- CSP with nonce (via proxy.ts)
+- HSTS in production
+
+## IDOR Protection
+
+All user endpoints scope queries to `auth.user.id`:
+```typescript
+const userId = auth.user.id
+const notes = await db.note.findMany({ where: { userId } })
 ```
 
-## Data Sanitization
-- DOMPurify (isomorphic) for all HTML content
-- Prisma middleware auto-sanitizes 8 models before write
-- Field-by-field sanitization per model type
+Payment creation derives userId from session, not request body.
 
-## Error Handling
-- Production-safe error messages (no stack traces)
-- Structured error hierarchy (AppError -> ValidationError, AuthenticationError, etc.)
-- Bengali user-facing messages
-- Sentry integration for error tracking
+## Audit Logging
 
-## Database Security
-- Parameterized queries via Prisma ORM (no SQL injection)
-- Connection pooling via PrismaPg adapter
-- Transaction retry logic for deadlock handling
-- Singleton PrismaClient prevents connection leaks
+- `AuditLog` model captures all admin mutations
+- Records: action, entityType, entityId, oldData, newData, adminId, IP, userAgent
+- Immutable (append-only, update/delete blocked at Prisma middleware)
+- Created inside transactions for atomicity

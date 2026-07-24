@@ -48,14 +48,7 @@ export async function POST(request: Request) {
       data: [{ ufsUrl: url, url, name: file.name, size: file.size, type: file.type }],
     })
   } catch (error) {
-    console.error('Local upload error:', error)
-    const message =
-      error instanceof Error
-        ? error.message.includes('ENOSPC')
-          ? 'সার্ভারে পর্যাপ্ত জায়গা নেই'
-          : 'আপলোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।'
-        : 'আপলোড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return handleApiError(error, 'Local upload error')
   }
 }
 

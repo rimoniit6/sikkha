@@ -1,9 +1,13 @@
 import { db } from '@/lib/db'
-import { apiResponse, apiError, paginatedApiResponse } from '@/lib/api-utils'
+import { apiResponse, apiError, paginatedApiResponse, applyRateLimit } from '@/lib/api-utils'
+import { apiLimiter } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/errors'
 
 export async function GET(request: Request) {
   try {
+    const rateCheck = await applyRateLimit(apiLimiter, request)
+    if (rateCheck) return rateCheck
+
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const tag = searchParams.get('tag')

@@ -557,10 +557,11 @@ const BlockItem = memo(function BlockItem({
 
 // ─── Add Block Menu ─────────────────────────────────────────────
 
-function AddBlockMenu({ onAdd }: { onAdd: (type: ContentBlock['type']) => void }) {
+function AddBlockMenu({ onAdd, allowedBlocks }: { onAdd: (type: ContentBlock['type']) => void; allowedBlocks?: ContentBlock['type'][] }) {
   const [open, setOpen] = useState(false)
 
-  const types: ContentBlock['type'][] = ['heading', 'text', 'image', 'math', 'data', 'code', 'divider', 'pdf', 'link', 'richtext', 'mindmap']
+  const allTypes: ContentBlock['type'][] = Object.keys(blockTypeConfig) as ContentBlock['type'][]
+  const types = allowedBlocks ?? allTypes
 
   return (
     <div className="space-y-0">
@@ -658,9 +659,10 @@ interface ContentBlockEditorProps {
   blocks: ContentBlock[]
   onChange?: (blocks: ContentBlock[]) => void
   previewMode?: boolean
+  allowedBlocks?: ContentBlock['type'][]
 }
 
-export default function ContentBlockEditor({ blocks, onChange, previewMode = false }: ContentBlockEditorProps) {
+export default function ContentBlockEditor({ blocks, onChange, previewMode = false, allowedBlocks }: ContentBlockEditorProps) {
   const noop = useCallback(() => {}, [])
   const onChangeRef = useRef(onChange ?? noop)
   useEffect(() => { onChangeRef.current = onChange ?? noop })
@@ -760,7 +762,7 @@ export default function ContentBlockEditor({ blocks, onChange, previewMode = fal
         </motion.div>
       )}
 
-      <AddBlockMenu onAdd={(type) => addBlock(type)} />
+      <AddBlockMenu onAdd={(type) => addBlock(type)} allowedBlocks={allowedBlocks} />
 
       {blocks.length > 0 && (
         <div className="flex items-center justify-center gap-2 text-[11px] text-muted-foreground/60 pt-1">

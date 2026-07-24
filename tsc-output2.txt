@@ -1,0 +1,290 @@
+[96msrc/app/api/admin/cq-exam-packages/route.ts[0m:[93m366[0m:[93m56[0m - [91merror[0m[90m TS2345: [0mArgument of type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is not assignable to parameter of type 'DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>'.
+  Type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is missing the following properties from type '{ $extends: ExtendsHook<"extends", TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { result: {}; model: {}; query: {}; client: {}; }, TypeMap<InternalArgs & { ...; }, {}>>; $transaction: { ...; }; $disconnect: () => Promise<...>; $connect: () => Promise<...>; }': $extends, $disconnect, $connect
+
+[7m366[0m           await recalculatePackageTotalSets(packageId, tx)
+[7m   [0m [91m                                                       ~~[0m
+
+[96msrc/app/api/admin/cq-exam-packages/route.ts[0m:[93m414[0m:[93m45[0m - [91merror[0m[90m TS2345: [0mArgument of type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is not assignable to parameter of type 'DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>'.
+  Type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is missing the following properties from type '{ $extends: ExtendsHook<"extends", TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { result: {}; model: {}; query: {}; client: {}; }, TypeMap<InternalArgs & { ...; }, {}>>; $transaction: { ...; }; $disconnect: () => Promise<...>; $connect: () => Promise<...>; }': $extends, $disconnect, $connect
+
+[7m414[0m           await recalculateSetTotals(setId, tx)
+[7m   [0m [91m                                            ~~[0m
+
+[96msrc/app/api/admin/cq-exam-packages/route.ts[0m:[93m452[0m:[93m45[0m - [91merror[0m[90m TS2345: [0mArgument of type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is not assignable to parameter of type 'DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>'.
+  Type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is missing the following properties from type '{ $extends: ExtendsHook<"extends", TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { result: {}; model: {}; query: {}; client: {}; }, TypeMap<InternalArgs & { ...; }, {}>>; $transaction: { ...; }; $disconnect: () => Promise<...>; $connect: () => Promise<...>; }': $extends, $disconnect, $connect
+
+[7m452[0m           await recalculateSetTotals(setId, tx)
+[7m   [0m [91m                                            ~~[0m
+
+[96msrc/app/api/admin/cq-exam-packages/route.ts[0m:[93m483[0m:[93m45[0m - [91merror[0m[90m TS2345: [0mArgument of type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is not assignable to parameter of type 'DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>'.
+  Type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is missing the following properties from type '{ $extends: ExtendsHook<"extends", TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { result: {}; model: {}; query: {}; client: {}; }, TypeMap<InternalArgs & { ...; }, {}>>; $transaction: { ...; }; $disconnect: () => Promise<...>; $connect: () => Promise<...>; }': $extends, $disconnect, $connect
+
+[7m483[0m           await recalculateSetTotals(setId, tx)
+[7m   [0m [91m                                            ~~[0m
+
+[96msrc/app/api/admin/mcq-exam-packages/route.ts[0m:[93m571[0m:[93m45[0m - [91merror[0m[90m TS2345: [0mArgument of type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is not assignable to parameter of type 'DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>'.
+  Type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is missing the following properties from type '{ $extends: ExtendsHook<"extends", TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { result: {}; model: {}; query: {}; client: {}; }, TypeMap<InternalArgs & { ...; }, {}>>; $transaction: { ...; }; $disconnect: () => Promise<...>; $connect: () => Promise<...>; }': $extends, $disconnect, $connect
+
+[7m571[0m           await recalculateSetTotals(setId, tx)
+[7m   [0m [91m                                            ~~[0m
+
+[96msrc/app/api/admin/mcq-exam-packages/route.ts[0m:[93m887[0m:[93m42[0m - [91merror[0m[90m TS2345: [0mArgument of type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is not assignable to parameter of type 'DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>'.
+  Type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is missing the following properties from type '{ $extends: ExtendsHook<"extends", TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { result: {}; model: {}; query: {}; client: {}; }, TypeMap<InternalArgs & { ...; }, {}>>; $transaction: { ...; }; $disconnect: () => Promise<...>; $connect: () => Promise<...>; }': $extends, $disconnect, $connect
+
+[7m887[0m           await recalculateSetTotals(id, tx)
+[7m   [0m [91m                                         ~~[0m
+
+[96msrc/app/api/admin/mcq-exam-packages/route.ts[0m:[93m1091[0m:[93m45[0m - [91merror[0m[90m TS2345: [0mArgument of type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is not assignable to parameter of type 'DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>'.
+  Type 'Omit<DynamicClientExtensionThis<TypeMap<InternalArgs & { result: {}; model: {}; query: {}; client: {}; }, {}>, TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { ...; }>, "$extends" | ... 3 more ... | "$use">' is missing the following properties from type '{ $extends: ExtendsHook<"extends", TypeMapCb<{ adapter: PrismaLibSql; log: ("warn" | "error")[]; }>, { result: {}; model: {}; query: {}; client: {}; }, TypeMap<InternalArgs & { ...; }, {}>>; $transaction: { ...; }; $disconnect: () => Promise<...>; $connect: () => Promise<...>; }': $extends, $disconnect, $connect
+
+[7m1091[0m           await recalculateSetTotals(setId, tx)
+[7m    [0m [91m                                            ~~[0m
+
+[96msrc/app/api/hierarchy/metadata/route.ts[0m:[93m21[0m:[93m27[0m - [91merror[0m[90m TS2552: [0mCannot find name 'error'. Did you mean 'Error'?
+
+[7m21[0m     return handleApiError(error, '[/api/hierarchy/metadata] Database client is not available')
+[7m  [0m [91m                          ~~~~~[0m
+
+  [96mnode_modules/typescript/lib/lib.es5.d.ts[0m:[93m1087[0m:[93m13[0m
+    [7m1087[0m declare var Error: ErrorConstructor;
+    [7m    [0m [96m            ~~~~~[0m
+    'Error' is declared here.
+
+[96msrc/app/blog/[slug]/page.tsx[0m:[93m171[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '{ tags: ({ tag: { id: string; name: string; slug: string; }; } & { postId: string; tagId: string; })[]; category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { ...; }' is not assignable to type 'BlogPostRecord'.
+  Types of property 'publishedAt' are incompatible.
+    Type 'Date | null' is not assignable to type 'string | null'.
+      Type 'Date' is not assignable to type 'string'.
+
+[7m171[0m         post={serialized}
+[7m   [0m [91m        ~~~~[0m
+
+  [96msrc/app/blog/[slug]/BlogDetailClient.tsx[0m:[93m19[0m:[93m3[0m
+    [7m19[0m   post: BlogPostRecord
+    [7m  [0m [96m  ~~~~[0m
+    The expected type comes from property 'post' which is declared here on type 'IntrinsicAttributes & Props'
+
+[96msrc/app/blog/[slug]/page.tsx[0m:[93m172[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '({ category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { id: string; createdAt: Date; ... 28 more ...; seriesOrder: number | null; })[]' is not assignable to type 'BlogPostRecord[]'.
+  Property 'tags' is missing in type '{ category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { id: string; createdAt: Date; ... 28 more ...; seriesOrder: number | null; }' but required in type 'BlogPostRecord'.
+
+[7m172[0m         relatedPosts={serializedRelated}
+[7m   [0m [91m        ~~~~~~~~~~~~[0m
+
+  [96msrc/features/blog/types/blog.ts[0m:[93m26[0m:[93m3[0m
+    [7m26[0m   tags: Array<{ tag: { id: string; name: string; slug: string } }>
+    [7m  [0m [96m  ~~~~[0m
+    'tags' is declared here.
+  [96msrc/app/blog/[slug]/BlogDetailClient.tsx[0m:[93m20[0m:[93m3[0m
+    [7m20[0m   relatedPosts: BlogPostRecord[]
+    [7m  [0m [96m  ~~~~~~~~~~~~[0m
+    The expected type comes from property 'relatedPosts' which is declared here on type 'IntrinsicAttributes & Props'
+
+[96msrc/app/blog/author/[id]/page.tsx[0m:[93m46[0m:[93m39[0m - [91merror[0m[90m TS2739: [0mType '{ category: { id: string; name: string; slug: string; color: string | null; } | null; } & { id: string; createdAt: Date; updatedAt: Date; slug: string; isActive: boolean; deletedAt: Date | null; ... 24 more ...; seriesOrder: number | null; }' is missing the following properties from type 'BlogPostRecord': author, tags
+
+[7m46[0m               <BlogCard key={post.id} post={serialize(post)} />
+[7m  [0m [91m                                      ~~~~[0m
+
+  [96msrc/features/blog/components/BlogCard.tsx[0m:[93m11[0m:[93m3[0m
+    [7m11[0m   post: BlogPostRecord
+    [7m  [0m [96m  ~~~~[0m
+    The expected type comes from property 'post' which is declared here on type 'IntrinsicAttributes & Props'
+
+[96msrc/app/blog/category/[slug]/page.tsx[0m:[93m50[0m:[93m39[0m - [91merror[0m[90m TS2741: [0mProperty 'tags' is missing in type '{ category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { id: string; createdAt: Date; ... 28 more ...; seriesOrder: number | null; }' but required in type 'BlogPostRecord'.
+
+[7m50[0m               <BlogCard key={post.id} post={serialize(post)} />
+[7m  [0m [91m                                      ~~~~[0m
+
+  [96msrc/features/blog/types/blog.ts[0m:[93m26[0m:[93m3[0m
+    [7m26[0m   tags: Array<{ tag: { id: string; name: string; slug: string } }>
+    [7m  [0m [96m  ~~~~[0m
+    'tags' is declared here.
+  [96msrc/features/blog/components/BlogCard.tsx[0m:[93m11[0m:[93m3[0m
+    [7m11[0m   post: BlogPostRecord
+    [7m  [0m [96m  ~~~~[0m
+    The expected type comes from property 'post' which is declared here on type 'IntrinsicAttributes & Props'
+
+[96msrc/app/blog/page.tsx[0m:[93m62[0m:[93m7[0m - [91merror[0m[90m TS2322: [0mType '({ tags: ({ tag: { id: string; name: string; slug: string; }; } & { postId: string; tagId: string; })[]; category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { ...; }) | null' is not assignable to type 'BlogPostRecord | null'.
+  Type '{ tags: ({ tag: { id: string; name: string; slug: string; }; } & { postId: string; tagId: string; })[]; category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { ...; }' is not assignable to type 'BlogPostRecord | null'.
+    Type '{ tags: ({ tag: { id: string; name: string; slug: string; }; } & { postId: string; tagId: string; })[]; category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { ...; }' is not assignable to type 'BlogPostRecord'.
+      Types of property 'publishedAt' are incompatible.
+        Type 'Date | null' is not assignable to type 'string | null'.
+          Type 'Date' is not assignable to type 'string'.
+
+[7m62[0m       featured={serialize(featured)}
+[7m  [0m [91m      ~~~~~~~~[0m
+
+  [96msrc/app/blog/BlogHomeClient.tsx[0m:[93m17[0m:[93m3[0m
+    [7m17[0m   featured: BlogPostRecord | null
+    [7m  [0m [96m  ~~~~~~~~[0m
+    The expected type comes from property 'featured' which is declared here on type 'IntrinsicAttributes & Props'
+
+[96msrc/app/blog/page.tsx[0m:[93m63[0m:[93m7[0m - [91merror[0m[90m TS2322: [0mType '({ category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { id: string; createdAt: Date; ... 28 more ...; seriesOrder: number | null; })[]' is not assignable to type 'BlogPostRecord[]'.
+  Property 'tags' is missing in type '{ category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { id: string; createdAt: Date; ... 28 more ...; seriesOrder: number | null; }' but required in type 'BlogPostRecord'.
+
+[7m63[0m       posts={serialize(posts)}
+[7m  [0m [91m      ~~~~~[0m
+
+  [96msrc/features/blog/types/blog.ts[0m:[93m26[0m:[93m3[0m
+    [7m26[0m   tags: Array<{ tag: { id: string; name: string; slug: string } }>
+    [7m  [0m [96m  ~~~~[0m
+    'tags' is declared here.
+  [96msrc/app/blog/BlogHomeClient.tsx[0m:[93m18[0m:[93m3[0m
+    [7m18[0m   posts: BlogPostRecord[]
+    [7m  [0m [96m  ~~~~~[0m
+    The expected type comes from property 'posts' which is declared here on type 'IntrinsicAttributes & Props'
+
+[96msrc/app/blog/page.tsx[0m:[93m64[0m:[93m7[0m - [91merror[0m[90m TS2322: [0mType '({ _count: { posts: number; }; } & { id: string; name: string; createdAt: Date; updatedAt: Date; slug: string; order: number; color: string | null; description: string | null; isActive: boolean; deletedAt: Date | null; deletedBy: string | null; deleteReason: string | null; })[]' is not assignable to type 'BlogCategoryRecord[]'.
+  Type '{ _count: { posts: number; }; } & { id: string; name: string; createdAt: Date; updatedAt: Date; slug: string; order: number; color: string | null; description: string | null; isActive: boolean; deletedAt: Date | null; deletedBy: string | null; deleteReason: string | null; }' is not assignable to type 'BlogCategoryRecord'.
+    Types of property 'createdAt' are incompatible.
+      Type 'Date' is not assignable to type 'string'.
+
+[7m64[0m       categories={serialize(activeCategories)}
+[7m  [0m [91m      ~~~~~~~~~~[0m
+
+  [96msrc/app/blog/BlogHomeClient.tsx[0m:[93m19[0m:[93m3[0m
+    [7m19[0m   categories: BlogCategoryRecord[]
+    [7m  [0m [96m  ~~~~~~~~~~[0m
+    The expected type comes from property 'categories' which is declared here on type 'IntrinsicAttributes & Props'
+
+[96msrc/app/blog/page.tsx[0m:[93m65[0m:[93m7[0m - [91merror[0m[90m TS2322: [0mType '({ category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { id: string; createdAt: Date; ... 28 more ...; seriesOrder: number | null; })[]' is not assignable to type 'BlogPostRecord[]'.
+  Property 'tags' is missing in type '{ category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { id: string; createdAt: Date; ... 28 more ...; seriesOrder: number | null; }' but required in type 'BlogPostRecord'.
+
+[7m65[0m       popularPosts={serialize(popularPosts)}
+[7m  [0m [91m      ~~~~~~~~~~~~[0m
+
+  [96msrc/features/blog/types/blog.ts[0m:[93m26[0m:[93m3[0m
+    [7m26[0m   tags: Array<{ tag: { id: string; name: string; slug: string } }>
+    [7m  [0m [96m  ~~~~[0m
+    'tags' is declared here.
+  [96msrc/app/blog/BlogHomeClient.tsx[0m:[93m20[0m:[93m3[0m
+    [7m20[0m   popularPosts: BlogPostRecord[]
+    [7m  [0m [96m  ~~~~~~~~~~~~[0m
+    The expected type comes from property 'popularPosts' which is declared here on type 'IntrinsicAttributes & Props'
+
+[96msrc/app/blog/tag/[slug]/page.tsx[0m:[93m51[0m:[93m39[0m - [91merror[0m[90m TS2741: [0mProperty 'tags' is missing in type '{ category: { id: string; name: string; slug: string; color: string | null; } | null; author: { id: string; name: string | null; avatar: string | null; } | null; } & { id: string; createdAt: Date; ... 28 more ...; seriesOrder: number | null; }' but required in type 'BlogPostRecord'.
+
+[7m51[0m               <BlogCard key={post.id} post={serialize(post)} />
+[7m  [0m [91m                                      ~~~~[0m
+
+  [96msrc/features/blog/types/blog.ts[0m:[93m26[0m:[93m3[0m
+    [7m26[0m   tags: Array<{ tag: { id: string; name: string; slug: string } }>
+    [7m  [0m [96m  ~~~~[0m
+    'tags' is declared here.
+  [96msrc/features/blog/components/BlogCard.tsx[0m:[93m11[0m:[93m3[0m
+    [7m11[0m   post: BlogPostRecord
+    [7m  [0m [96m  ~~~~[0m
+    The expected type comes from property 'post' which is declared here on type 'IntrinsicAttributes & Props'
+
+[96msrc/app/sitemap.ts[0m:[93m105[0m:[93m21[0m - [91merror[0m[90m TS18048: [0m'blogPosts' is possibly 'undefined'.
+
+[7m105[0m   const blogPages = blogPosts.map((p) => ({
+[7m   [0m [91m                    ~~~~~~~~~[0m
+
+[96msrc/app/sitemap.ts[0m:[93m112[0m:[93m29[0m - [91merror[0m[90m TS18048: [0m'blogCategories' is possibly 'undefined'.
+
+[7m112[0m   const blogCategoryPages = blogCategories.map((c) => ({
+[7m   [0m [91m                            ~~~~~~~~~~~~~~[0m
+
+[96msrc/app/sitemap.ts[0m:[93m119[0m:[93m24[0m - [91merror[0m[90m TS18048: [0m'blogTags' is possibly 'undefined'.
+
+[7m119[0m   const blogTagPages = blogTags.map((t) => ({
+[7m   [0m [91m                       ~~~~~~~~[0m
+
+[96msrc/components/admin/hierarchy/BoardManager.tsx[0m:[93m88[0m:[93m38[0m - [91merror[0m[90m TS2304: [0mCannot find name 'generateSlug'.
+
+[7m88[0m       const slug = boardForm.slug || generateSlug(boardForm.name)
+[7m  [0m [91m                                     ~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/hierarchy/ChapterManager.tsx[0m:[93m107[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'generateSlug'.
+
+[7m107[0m       const slug = chapterForm.slug || generateSlug(chapterForm.name)
+[7m   [0m [91m                                       ~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/hierarchy/ClassManager.tsx[0m:[93m101[0m:[93m38[0m - [91merror[0m[90m TS2304: [0mCannot find name 'generateSlug'.
+
+[7m101[0m       const slug = classForm.slug || generateSlug(classForm.name)
+[7m   [0m [91m                                     ~~~~~~~~~~~~[0m
+
+[96msrc/components/admin/hierarchy/SubjectManager.tsx[0m:[93m113[0m:[93m40[0m - [91merror[0m[90m TS2304: [0mCannot find name 'generateSlug'.
+
+[7m113[0m       const slug = subjectForm.slug || generateSlug(subjectForm.name)
+[7m   [0m [91m                                       ~~~~~~~~~~~~[0m
+
+[96msrc/components/ui/image-resize-node-view.tsx[0m:[93m14[0m:[93m10[0m - [91merror[0m[90m TS2305: [0mModule '"@tiptap/react"' has no exported member 'NodeViewWrapper'.
+
+[7m14[0m import { NodeViewWrapper } from '@tiptap/react'
+[7m  [0m [91m         ~~~~~~~~~~~~~~~[0m
+
+[96msrc/components/ui/RichTextBlockEditor.tsx[0m:[93m26[0m:[93m25[0m - [91merror[0m[90m TS2305: [0mModule '"@tiptap/react"' has no exported member 'ReactNodeViewRenderer'.
+
+[7m26[0m import { EditorContent, ReactNodeViewRenderer, useEditor } from '@tiptap/react'
+[7m  [0m [91m                        ~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/features/shared/exam-engine/__tests__/access.test.ts[0m:[93m96[0m:[93m79[0m - [91merror[0m[90m TS2353: [0mObject literal may only specify known properties, and 'reason' does not exist in type '{ hasAccess: boolean; source: string | null; }'.
+
+[7m96[0m     vi.mocked(resolveCourseLayerAccess).mockResolvedValue({ hasAccess: false, reason: 'no access' })
+[7m  [0m [91m                                                                              ~~~~~~[0m
+
+[96msrc/features/shared/exam-engine/__tests__/access.test.ts[0m:[93m107[0m:[93m59[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ hasAccess: false; }' is not assignable to parameter of type '{ hasAccess: boolean; source: string | null; }'.
+  Property 'source' is missing in type '{ hasAccess: false; }' but required in type '{ hasAccess: boolean; source: string | null; }'.
+
+[7m107[0m     vi.mocked(resolveCourseLayerAccess).mockResolvedValue({ hasAccess: false })
+[7m   [0m [91m                                                          ~~~~~~~~~~~~~~~~~~~~[0m
+
+  [96msrc/lib/course-access-resolver.ts[0m:[93m257[0m:[93m34[0m
+    [7m257[0m ): Promise<{ hasAccess: boolean; source: string | null }> {
+    [7m   [0m [96m                                 ~~~~~~[0m
+    'source' is declared here.
+
+[96msrc/hooks/__tests__/use-bulk-content-selection.test.ts[0m:[93m2[0m:[93m12[0m - [91merror[0m[90m TS7017: [0mElement implicitly has an 'any' type because type 'typeof globalThis' has no index signature.
+
+[7m2[0m globalThis.IS_REACT_ACT_ENVIRONMENT = true
+[7m [0m [91m           ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/hooks/__tests__/use-bulk-content-selection.test.ts[0m:[93m45[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType 'Root' is not assignable to type 'Container | null'.
+
+[7m45[0m     root = createRoot(container)
+[7m  [0m [91m    ~~~~[0m
+
+[96mtests/api-response-format.test.ts[0m:[93m191[0m:[93m9[0m - [91merror[0m[90m TS18046: [0m'bundles' is of type 'unknown'.
+
+[7m191[0m     if (bundles.length === 0) return // no bundles seeded
+[7m   [0m [91m        ~~~~~~~[0m
+
+[96mtests/api-response-format.test.ts[0m:[93m192[0m:[93m23[0m - [91merror[0m[90m TS18046: [0m'bundles' is of type 'unknown'.
+
+[7m192[0m     const bundleId = (bundles[0] as Record<string, unknown>).id as string
+[7m   [0m [91m                      ~~~~~~~[0m
+
+[96mtests/api-response-format.test.ts[0m:[93m213[0m:[93m18[0m - [91merror[0m[90m TS2339: [0mProperty 'length' does not exist on type '{}'.
+
+[7m213[0m     if (packages.length === 0) return // no packages seeded
+[7m   [0m [91m                 ~~~~~~[0m
+
+[96mtests/api-response-format.test.ts[0m:[93m214[0m:[93m24[0m - [91merror[0m[90m TS7053: [0mElement implicitly has an 'any' type because expression of type '0' can't be used to index type '{}'.
+  Property '0' does not exist on type '{}'.
+
+[7m214[0m     const packageId = (packages[0] as Record<string, unknown>).id as string
+[7m   [0m [91m                       ~~~~~~~~~~~[0m
+
+
+Found 34 errors in 18 files.
+
+Errors  Files
+     4  src/app/api/admin/cq-exam-packages/route.ts[90m:366[0m
+     3  src/app/api/admin/mcq-exam-packages/route.ts[90m:571[0m
+     1  src/app/api/hierarchy/metadata/route.ts[90m:21[0m
+     2  src/app/blog/[slug]/page.tsx[90m:171[0m
+     1  src/app/blog/author/[id]/page.tsx[90m:46[0m
+     1  src/app/blog/category/[slug]/page.tsx[90m:50[0m
+     4  src/app/blog/page.tsx[90m:62[0m
+     1  src/app/blog/tag/[slug]/page.tsx[90m:51[0m
+     3  src/app/sitemap.ts[90m:105[0m
+     1  src/components/admin/hierarchy/BoardManager.tsx[90m:88[0m
+     1  src/components/admin/hierarchy/ChapterManager.tsx[90m:107[0m
+     1  src/components/admin/hierarchy/ClassManager.tsx[90m:101[0m
+     1  src/components/admin/hierarchy/SubjectManager.tsx[90m:113[0m
+     1  src/components/ui/image-resize-node-view.tsx[90m:14[0m
+     1  src/components/ui/RichTextBlockEditor.tsx[90m:26[0m
+     2  src/features/shared/exam-engine/__tests__/access.test.ts[90m:96[0m
+     2  src/hooks/__tests__/use-bulk-content-selection.test.ts[90m:2[0m
+     4  tests/api-response-format.test.ts[90m:191[0m

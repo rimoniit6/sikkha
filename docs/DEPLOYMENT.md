@@ -1,98 +1,88 @@
 # Deployment
 
-## Prerequisites
+> Deployment guide for শিক্ষা বাংলা.
 
-- Node.js 20+
-- PostgreSQL database
-- Upstash Redis instance
-- Supabase project
-- UploadThing account
-- Sentry account (optional)
+## Development
+
+```bash
+npm install
+npm run db:generate
+npm run db:push
+npx prisma db seed
+npm run create-super-admin
+npm run dev
+```
+
+Development server runs on port 3000 with Turbopack.
+
+## Production Build
+
+```bash
+STANDALONE_OUTPUT=true npm run build
+npm run start
+```
 
 ## Environment Variables
 
-See `.env.example` for all required variables.
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | Yes | SQLite path (`file:./db/custom.db`) |
+| `JWT_SECRET` | Yes | JWT signing secret (32+ chars) |
+| `CSRF_SECRET` | Yes | CSRF token signing secret (32+ chars) |
+| `SUPER_ADMIN_EMAIL` | Yes | Default super admin email |
+| `SUPER_ADMIN_PASSWORD` | Yes | Default super admin password |
+| `ENABLE_CSRF` | No | Enable CSRF in dev (`true`/`false`) |
+| `SENTRY_DSN` | No | Sentry error tracking |
+| `STANDALONE_OUTPUT` | No | Enable standalone build |
 
-### Required
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `DIRECT_URL` | Direct PostgreSQL connection (for migrations) |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
-| `CSRF_SECRET` | 32+ character random string |
-| `UPSTASH_REDIS_REST_URL` | Upstash Redis REST URL |
-| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
-| `NEXT_PUBLIC_SITE_URL` | Public site URL |
-| `SITE_URL` | Internal site URL |
-
-### Optional
-| Variable | Description |
-|---|---|
-| `UPLOADTHING_SECRET` | UploadThing secret |
-| `UPLOADTHING_APP_ID` | UploadThing app ID |
-| `UPLOADTHING_TOKEN` | UploadThing token |
-| `SENTRY_DSN` | Sentry DSN |
-| `NEXT_PUBLIC_SENTRY_DSN` | Public Sentry DSN |
-
-## Build
+## Prisma
 
 ```bash
-# Install dependencies
-npm install
-
-# Generate Prisma client
-npm run db:generate
-
-# Push schema to database
-npm run db:push
-
-# Build
-npm run build
+npm run db:push      # Push schema changes
+npm run db:generate  # Regenerate Prisma client
+npm run db:migrate   # Run migrations
+npm run db:reset     # Reset and re-seed
+npx prisma db seed   # Seed database
 ```
 
-For standalone output (self-hosting):
-```bash
-STANDALONE_OUTPUT=true npm run build
-```
-
-## Deploy
-
-### Vercel (Recommended)
-
-1. Connect GitHub repository
-2. Set environment variables
-3. Build command: `npm run build`
-4. Output directory: `.next`
-
-### Docker / Self-Hosted
+## Seed Data
 
 ```bash
-# Build standalone
-STANDALONE_OUTPUT=true npm run build
-
-# Run
-NODE_ENV=production node .next/standalone/server.js
+npx prisma db seed          # Full seed (users, content, settings)
+npm run seed:content        # Content data only
+npm run seed:missing        # Missing content references
+npm run create-super-admin  # Create super admin user
 ```
 
-## Database Migrations
+## Vercel Deployment
 
-```bash
-# Create migration
-npm run db:migrate
+1. Connect repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Vercel auto-detects Next.js and deploys
 
-# Reset database
-npm run db:reset
+Note: SQLite works for development. For production, consider PostgreSQL migration.
 
-# Seed data
-npm run seed:content
-npm run seed:missing
+## Docker Deployment
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN STANDALONE_OUTPUT=true npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
 ```
 
-## Monitoring
+## Production Checklist
 
-- **Errors**: Sentry
-- **Performance**: Sentry Performance
-- **Rate Limiting**: Upstash Analytics
-- **Database**: Prisma Studio (`npx prisma studio`)
+- [ ] `JWT_SECRET` set to strong random value
+- [ ] `CSRF_SECRET` set to strong random value
+- [ ] `ENABLE_CSRF=true` in production
+- [ ] `STANDALONE_OUTPUT=true` for Docker
+- [ ] Sentry DSN configured
+- [ ] Database backed up
+- [ ] Admin accounts created
+- [ ] SSL/TLS configured
+- [ ] Security headers enabled

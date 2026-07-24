@@ -1,64 +1,80 @@
 # Contributing
 
-## Code Style
+> Contribution guidelines for শিক্ষা বাংলা.
 
-- TypeScript strict mode
-- Functional components with hooks
-- Named exports for components
-- Zustand stores with typed selectors
-- React Query for server state
-- Zod schemas for validation
+## Getting Started
 
-## Architecture Guidelines
+1. Fork the repository
+2. Clone your fork
+3. Install dependencies: `npm install`
+4. Create a feature branch: `git checkout -b feature/amazing-feature`
+5. Make your changes
+6. Run tests: `npm test`
+7. Run linter: `npm run lint`
+8. Commit: `git commit -m 'Add amazing feature'`
+9. Push: `git push origin feature/amazing-feature`
+10. Open a Pull Request
 
-### Component Structure
-```
-src/components/{domain}/
-  ComponentName.tsx
-  ComponentName.types.ts  (if complex)
-```
-
-### Store Structure
-- One file per store in `src/store/`
-- Export typed selector hooks
-- Use `useShallow` for multi-value selections
-
-### API Routes
-- Use `createRouteHandler` factory for consistency
-- Zod schemas for request validation
-- Standardized response format `{ success, data, error, code }`
-- Auth guards: `withAuth`, `withAdmin`, `withCsrf`
-
-### Database
-- Prisma ORM with PostgreSQL
-- HTML sanitization via store middleware
-- Batch queries to prevent N+1
-- Selective field loading
-
-## Naming Conventions
-
-- **Files**: `kebab-case.ts` for utilities, `PascalCase.tsx` for components
-- **Components**: PascalCase
-- **Functions**: camelCase
-- **Stores**: camelCase with `use` prefix
-- **Types**: PascalCase, exported
-
-## Testing
+## Development Setup
 
 ```bash
-# Run all tests
-npm test
-
-# Watch mode
-npm run test:watch
-
-# With coverage
-npx vitest run --coverage
+npm install
+npm run db:generate
+npm run db:push
+npx prisma db seed
+npm run create-super-admin
+npm run dev
 ```
 
-## Pull Request Process
+## Coding Standards
 
-1. Ensure tests pass
-2. Update relevant documentation
-3. Add changes to CHANGELOG
-4. Create PR with descriptive title
+### TypeScript
+- Strict mode
+- No `any` types
+- Explicit return types on exports
+
+### Naming
+- Files: `kebab-case.ts`
+- Components: `PascalCase.tsx`
+- Hooks: `use-kebab-case.ts`
+- API routes: `kebab-case/route.ts`
+
+### Components
+- `'use client'` directive for client components
+- Extract logic into custom hooks
+- Keep under 300 lines
+
+### API Routes
+- Use `handleApiError` in catch blocks
+- Use `validateBody` for mutations
+- Use `withAdmin` for admin routes
+- Use `withCsrf` for mutations
+- Return `apiResponse`/`apiError`
+
+### Transactions
+- Use `safeTransaction` for atomic operations
+- Always use `tx`, never `db` inside transactions
+
+## Pull Request Guidelines
+
+- Write clear commit messages
+- Add tests for new features
+- Update documentation if needed
+- Follow existing code patterns
+- Keep PRs focused (one feature/fix per PR)
+
+## Issue Reporting
+
+- Use GitHub Issues
+- Include reproduction steps
+- Include environment details
+- Include error messages/screenshots
+
+## Code Review
+
+All PRs require review before merging. Reviewers check:
+- Code quality and consistency
+- Test coverage
+- Security implications
+- Performance impact
+- Documentation updates

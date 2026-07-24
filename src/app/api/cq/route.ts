@@ -403,7 +403,6 @@ export async function POST(request: Request) {
       { status: 201 }
     )
   } catch (error) {
-    console.error('Create CQ error:', error)
-    return apiError('সৃজনশীল প্রশ্ন তৈরি করতে সমস্যা হয়েছে', 500)
+    return handleApiError(error, 'Create CQ error')
   }
 }

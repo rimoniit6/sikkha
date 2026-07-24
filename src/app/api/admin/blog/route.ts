@@ -14,6 +14,7 @@ const createBlogSchema = z.object({
   slug: z.string().optional(),
   excerpt: z.string().nullable().optional(),
   content: z.string().optional().default(''),
+  contentBlocks: z.string().nullable().optional(),
   featuredImage: z.string().nullable().optional(),
   categoryId: z.string().nullable().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional().default('DRAFT'),
@@ -111,7 +112,7 @@ export async function POST(request: Request) {
     const validated = validateBody(createBlogSchema, body)
     if ('error' in validated) return validated.error
 
-    const { tagIds, content, publishedAt, scheduledAt, ...rest } = validated.data
+    const { tagIds, content, contentBlocks, publishedAt, scheduledAt, ...rest } = validated.data
 
     const slug = rest.slug || generateSlug(rest.title)
     const readingTime = calculateReadingTime(content || '')
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
           ...rest,
           slug: uniqueSlug,
           content: sanitizeForStorage(content || ''),
+          contentBlocks: contentBlocks || null,
           readingTime,
           publishedAt: publishedAt ? new Date(publishedAt) : rest.status === 'PUBLISHED' ? new Date() : null,
           scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
@@ -146,6 +148,12 @@ export async function POST(request: Request) {
     await invalidateContentCache('blog')
     return apiResponse(data, 201)
   } catch (error) {
+    console.error('[Blog POST] Full error:', error)
+    if (error instanceof Error) {
+      console.error('[Blog POST] Error name:', error.name)
+      console.error('[Blog POST] Error message:', error.message)
+      console.error('[Blog POST] Error stack:', error.stack)
+    }
     return handleApiError(error, 'Admin Create Blog Post')
   }
 }

@@ -1,9 +1,13 @@
 import { db } from '@/lib/db'
-import { apiResponse } from '@/lib/api-utils'
+import { apiResponse, applyRateLimit } from '@/lib/api-utils'
+import { apiLimiter } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/errors'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const rateCheck = await applyRateLimit(apiLimiter, request)
+    if (rateCheck) return rateCheck
+
     const data = await db.blogTag.findMany({
       include: { _count: { select: { posts: { where: { post: { status: 'PUBLISHED', deletedAt: null, publishedAt: { lte: new Date() } } } } } } },
       orderBy: { name: 'asc' },

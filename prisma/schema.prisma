@@ -1955,6 +1955,7 @@ model BlogPost {
   ogImage         String?
   robots          String?
   jsonLd          String?
+  contentBlocks   String?
   deletedAt       DateTime?
   deletedBy       String?
   deleteReason    String?

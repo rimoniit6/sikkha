@@ -294,9 +294,6 @@ export async function GET(
 
     return NextResponse.json(result)
   } catch (error) {
-    return handleApiError(error, 'Get subject detail error:')
-      { error: 'বিষয়ের বিস্তারিত তথ্য আনতে সমস্যা হয়েছে' },
-      { status: 500 }
-    )
+    return handleApiError(error, 'Get subject detail error')
   }
 }

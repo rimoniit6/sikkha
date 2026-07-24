@@ -78,9 +78,6 @@ export async function GET(request: Request) {
 
     return NextResponse.json(result)
   } catch (error) {
-    return handleApiError(error, 'Fetch question bank error:')
-      { error: 'প্রশ্ন আনতে সমস্যা হয়েছে' },
-      { status: 500 }
-    )
+    return handleApiError(error, 'Fetch question bank error')
   }
 }

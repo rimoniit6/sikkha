@@ -4,6 +4,7 @@ export interface BlogPostRecord {
   slug: string
   excerpt: string | null
   content: string
+  contentBlocks: string | null
   featuredImage: string | null
   gallery: string | null
   authorId: string | null
@@ -35,6 +36,7 @@ export interface BlogPostInput {
   slug?: string
   excerpt?: string | null
   content?: string
+  contentBlocks?: string | null
   featuredImage?: string | null
   categoryId?: string | null
   status?: BlogPostStatus

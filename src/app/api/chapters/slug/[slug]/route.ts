@@ -49,9 +49,6 @@ export async function GET(
       data: chapter,
     })
   } catch (error) {
-    return handleApiError(error, '[/api/chapters/slug] Error:')
-      { error: 'সার্ভার ত্রুটি' },
-      { status: 500 }
-    )
+    return handleApiError(error, '[/api/chapters/slug] Error')
   }
 }

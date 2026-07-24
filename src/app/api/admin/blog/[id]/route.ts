@@ -14,6 +14,7 @@ const updateBlogSchema = z.object({
   slug: z.string().optional(),
   excerpt: z.string().nullable().optional(),
   content: z.string().optional(),
+  contentBlocks: z.string().nullable().optional(),
   featuredImage: z.string().nullable().optional(),
   categoryId: z.string().nullable().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
@@ -89,7 +90,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return apiError('ব্লগ পোস্ট খুঁজে পাওয়া যায়নি', 404)
     }
 
-    const { tagIds, content, publishedAt, scheduledAt, ...rest } = validated.data
+    const { tagIds, content, contentBlocks, publishedAt, scheduledAt, ...rest } = validated.data
 
     const data = await db.$transaction(async (tx) => {
       const updateData: Record<string, unknown> = {}
@@ -103,6 +104,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (content !== undefined) {
         updateData.content = sanitizeForStorage(content)
         updateData.readingTime = calculateReadingTime(content)
+      }
+
+      if (contentBlocks !== undefined) {
+        updateData.contentBlocks = contentBlocks
       }
 
       if (rest.slug) {
@@ -143,6 +148,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     await invalidateContentCache('blog')
     return apiResponse(data)
   } catch (error) {
+    console.error('[Blog PUT] Full error:', error)
+    if (error instanceof Error) {
+      console.error('[Blog PUT] Error name:', error.name)
+      console.error('[Blog PUT] Error message:', error.message)
+      console.error('[Blog PUT] Error stack:', error.stack)
+    }
     return handleApiError(error, 'Admin Update Blog Post')
   }
 }
