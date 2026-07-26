@@ -59,9 +59,9 @@ export async function GET(request: Request) {
 
     if (q) {
       where.OR = [
-        { question: { contains: q } },
-        { explanation: { contains: q } },
-        { tags: { contains: q } },
+        { question: { contains: q, mode: 'insensitive' } },
+        { explanation: { contains: q, mode: 'insensitive' } },
+        { tags: { contains: q, mode: 'insensitive' } },
       ]
     }
     if (classLevel) where.classLevel = classLevel

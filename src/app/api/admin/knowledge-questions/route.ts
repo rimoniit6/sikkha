@@ -44,8 +44,8 @@ export async function GET(request: Request) {
     if (type) where.type = type
     if (q) {
       where.OR = [
-        { question: { contains: q } },
-        { answer: { contains: q } },
+        { question: { contains: q, mode: 'insensitive' } },
+        { answer: { contains: q, mode: 'insensitive' } },
       ]
     }
     if (isPremium !== null && isPremium !== undefined) where.isPremium = isPremium === 'true'

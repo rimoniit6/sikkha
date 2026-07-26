@@ -1,8 +1,7 @@
 import "server-only"
-import { join } from 'path'
 
 import { PrismaClient } from '@prisma/client'
-import { PrismaLibSql } from '@prisma/adapter-libsql'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { sanitizeForStorage } from './sanitize'
 import { SOFT_DELETE_MODELS, PRISMA_MODEL_MAP } from './soft-delete'
 
@@ -73,13 +72,8 @@ function injectSoftDeleteFilter(args: Record<string, unknown>): void {
 
 const isProduction = process.env.NODE_ENV === 'production'
 
-// Create libSQL adapter for SQLite - PrismaLibSql is a factory in v7
-const projectRoot = process.cwd()
-const dbUrl = process.env.DATABASE_URL || `file:${join(projectRoot, 'dev.db')}`
-
 function createPrismaClient() {
-  const adapter = new PrismaLibSql({ url: dbUrl })
-
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
   const client = new PrismaClient({
     adapter,
     log: isProduction ? ['error', 'warn'] : ['error', 'warn'],
@@ -140,7 +134,8 @@ export const db = globalForPrisma.prisma ?? createPrismaClient()
 
 if (!isProduction) globalForPrisma.prisma = db
 
-if (typeof process !== 'undefined') {
+if (typeof process !== 'undefined' && !(process as unknown as Record<string, unknown>).__dbDisconnectRegistered) {
+  ;(process as unknown as Record<string, unknown>).__dbDisconnectRegistered = true
   process.on('beforeExit', async () => {
     await db.$disconnect()
   })

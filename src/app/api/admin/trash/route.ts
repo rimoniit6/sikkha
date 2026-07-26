@@ -2,83 +2,9 @@ import { db } from '@/lib/db'
 import { apiResponse, apiError, withAdmin, withCsrf, parsePaginationParams, applyRateLimit } from '@/lib/api-utils'
 import { apiLimiter } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/errors'
-import { createAuditLog, auditFromRequest, AuditActions } from '@/lib/audit'
-import { restore, bulkRestore, forceDelete, bulkForceDelete, previewForceDelete, bulkPreviewForceDelete, SOFT_DELETE_MODELS, getPrismaModel } from '@/lib/soft-delete'
+import { createAuditLog, auditFromRequest, AuditActions, getClientIP } from '@/lib/audit'
+import { restore, bulkRestore, forceDelete, bulkForceDelete, previewForceDelete, bulkPreviewForceDelete, SOFT_DELETE_MODELS, getPrismaModel, MODEL_LABELS, DISPLAY_FIELDS_MAP } from '@/lib/soft-delete'
 import { NextResponse } from 'next/server'
-
-// Map of model name → human-readable label (Bengali)
-const MODEL_LABELS: Record<string, string> = {
-  classCategory: 'শ্রেণি',
-  subject: 'বিষয়',
-  chapter: 'অধ্যায়',
-  topic: 'টপিক',
-  knowledgeQuestion: 'সংক্ষিপ্ত প্রশ্ন',
-  lecture: 'লেকচার',
-  resource: 'রিসোর্স',
-  mcq: 'MCQ',
-  cq: 'CQ',
-  suggestion: 'সাজেশন',
-  course: 'কোর্স',
-  courseLesson: 'কোর্স লেসন',
-  banner: 'ব্যানার',
-  faq: 'FAQ',
-  testimonial: 'টেস্টিমোনিয়াল',
-  notice: 'নোটিশ',
-  navigation: 'নেভিগেশন',
-  contentType: 'কন্টেন্ট টাইপ',
-  featuredContent: 'ফিচার্ড কন্টেন্ট',
-  contentBundle: 'বান্ডেল',
-  contentPackage: 'প্যাকেজ',
-  mcqExamPackage: 'MCQ এক্সাম প্যাকেজ',
-  cqExamPackage: 'CQ এক্সাম প্যাকেজ',
-  teacherModerator: 'শিক্ষক',
-  board: 'বোর্ড',
-  examYear: 'পরীক্ষার সাল',
-  boardYear: 'বোর্ড সাল',
-  exam: 'এক্সাম',
-  userSubscription: 'সাবস্ক্রিপশন',
-  mcqExamPackagePurchase: 'MCQ ক্রয়',
-  cqExamPackagePurchase: 'CQ ক্রয়',
-  blogPost: 'ব্লগ পোস্ট',
-  blogCategory: 'ব্লগ ক্যাটাগরি',
-}
-
-// Fields to display per model type (first non-id field for display)
-const DISPLAY_FIELDS: Record<string, string[]> = {
-  classCategory: ['name', 'slug'],
-  subject: ['name', 'slug'],
-  chapter: ['name', 'slug'],
-  topic: ['name', 'slug'],
-  knowledgeQuestion: ['question'],
-  lecture: ['title', 'slug'],
-  resource: ['title'],
-  mcq: ['question'],
-  cq: ['uddeepok'],
-  suggestion: ['title', 'slug'],
-  course: ['title', 'slug'],
-  courseLesson: ['title'],
-  banner: ['title'],
-  fAQ: ['question'],
-  testimonial: ['name', 'content'],
-  notice: ['title'],
-  navigation: ['label', 'route'],
-  contentType: ['key', 'labelBn'],
-  featuredContent: ['contentType', 'title'],
-  contentBundle: ['title', 'slug'],
-  contentPackage: ['title', 'slug'],
-  mcqExamPackage: ['title'],
-  cqExamPackage: ['title'],
-  teacherModerator: ['name', 'title'],
-  board: ['name', 'slug'],
-  examYear: ['year'],
-  boardYear: ['board', 'year'],
-  exam: ['title'],
-  userSubscription: ['classLevel'],
-  mcqExamPackagePurchase: ['purchasedAt'],
-  cqExamPackagePurchase: ['purchasedAt'],
-  blogPost: ['title', 'slug'],
-  blogCategory: ['name', 'slug'],
-}
 
 // GET: List all soft-deleted records across all Category A models
 export async function GET(request: Request) {
@@ -118,7 +44,7 @@ export async function GET(request: Request) {
     const results = await Promise.allSettled(
       modelsToQuery.map(async (modelName) => {
         const label = MODEL_LABELS[modelName] || modelName
-        const displayFields = DISPLAY_FIELDS[modelName] || []
+        const displayFields = DISPLAY_FIELDS_MAP[modelName] || []
 
         const where: Record<string, unknown> = {
           deletedAt: { not: null },
@@ -131,7 +57,7 @@ export async function GET(request: Request) {
         // Search in display fields
         if (search && displayFields.length > 0) {
           where.OR = displayFields.map((field: string) => ({
-            [field]: { contains: search },
+            [field]: { contains: search, mode: 'insensitive' },
           }))
         }
 
@@ -521,11 +447,3 @@ export async function POST(request: Request) {
   }
 }
 
-// Helper to get client IP from request
-function getClientIP(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for')
-  if (forwarded) return forwarded.split(',')[0].trim()
-  const realIP = request.headers.get('x-real-ip')
-  if (realIP) return realIP
-  return 'unknown'
-}

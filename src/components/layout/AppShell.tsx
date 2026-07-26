@@ -5,12 +5,15 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import Header from './Header'
 import Footer from './Footer'
 import BottomNav from './BottomNav'
+import { FocusModeBar } from '@/components/user/focus/FocusModeBar'
 import NoticeBar from '@/components/shared/NoticeBar'
 import SpecialNoticePopup from '@/components/home/SpecialNoticePopup'
 import ScrollToTop from '@/components/shared/ScrollToTop'
 import { ErrorBoundary } from '@/components/shared/ErrorBoundary'
+import SyncStatusIndicator from '@/components/pwa/SyncStatusIndicator'
 import { isAdminRoute } from '@/store/router'
 import { parseUrl } from '@/lib/urls'
+import { useFocusMode } from '@/store/focus-mode'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -96,15 +99,25 @@ export default function AppShell({ children }: AppShellProps) {
   const searchParams = useSearchParams()
   const parsed = parseUrl(pathname, searchParams ?? undefined)
   const isAdmin = parsed ? isAdminRoute(parsed.route) : false
+  const { active: focusActive } = useFocusMode()
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
+    <div className={`min-h-screen flex flex-col bg-background text-foreground ${focusActive ? 'focus-mode' : ''}`}>
       <NetworkStatus />
       <div className={isAdmin ? 'h-screen' : 'min-h-screen flex flex-col'}>
-        {!isAdmin && <Header />}
-        {!isAdmin && <NoticeBar />}
+        {!isAdmin && !focusActive && <Header />}
+        {!isAdmin && !focusActive && <NoticeBar />}
 
-        <main className={isAdmin ? 'h-full' : 'flex-1 pt-14 sm:pt-16 pb-24 md:pb-8 mb-8 safe-bottom'}>
+        <main
+          key={pathname}
+          className={`${
+            isAdmin
+              ? 'h-full'
+              : focusActive
+                ? 'flex-1 motion-safe:animate-fade-in'
+                : 'flex-1 pt-14 sm:pt-16 pb-24 md:pb-8 safe-bottom motion-safe:animate-fade-in'
+          }`}
+        >
           <ErrorBoundary>
             <Suspense fallback={
               <div className="flex items-center justify-center min-h-[60vh]">
@@ -119,9 +132,11 @@ export default function AppShell({ children }: AppShellProps) {
           </ErrorBoundary>
         </main>
 
-        {!isAdmin && <Footer />}
-        {!isAdmin && <BottomNav />}
-        {!isAdmin && <SpecialNoticePopup />}
+        {focusActive && <FocusModeBar />}
+        {!isAdmin && !focusActive && <SyncStatusIndicator />}
+        {!isAdmin && !focusActive && <Footer />}
+        {!isAdmin && !focusActive && <BottomNav />}
+        {!isAdmin && !focusActive && <SpecialNoticePopup />}
         <ScrollToTop />
       </div>
     </div>

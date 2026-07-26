@@ -43,8 +43,8 @@ export async function GET(request: Request) {
 
     if (q) {
       where.OR = [
-        { title: { contains: q } },
-        { content: { contains: q } },
+        { title: { contains: q, mode: 'insensitive' } },
+        { content: { contains: q, mode: 'insensitive' } },
       ]
     }
     if (chapterId) where.chapterId = chapterId

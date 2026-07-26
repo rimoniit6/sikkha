@@ -188,8 +188,8 @@ describe('Detail endpoints — response format', () => {
         ? (listBody.data as Record<string, unknown>).data
         : []
 
-    if (bundles.length === 0) return // no bundles seeded
-    const bundleId = (bundles[0] as Record<string, unknown>).id as string
+    if ((bundles as unknown[]).length === 0) return // no bundles seeded
+    const bundleId = ((bundles as unknown[])[0] as Record<string, unknown>).id as string
 
     const result = await fetchApi(`/api/bundles/${bundleId}`)
     if (result.status !== 200) return
@@ -210,8 +210,8 @@ describe('Detail endpoints — response format', () => {
       ? (listBody.data as Record<string, unknown>).packages || []
       : []
 
-    if (packages.length === 0) return // no packages seeded
-    const packageId = (packages[0] as Record<string, unknown>).id as string
+    if ((packages as unknown[]).length === 0) return // no packages seeded
+    const packageId = ((packages as unknown[])[0] as Record<string, unknown>).id as string
 
     const result = await fetchApi(`/api/packages/${packageId}`)
     if (result.status !== 200) return

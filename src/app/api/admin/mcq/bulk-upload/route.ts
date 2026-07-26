@@ -78,7 +78,7 @@ export async function POST(request: Request) {
       const firstSubjectName = rows[0][Object.keys(rows[0]).find(k => COLUMN_MAP[k] === 'subjectName') || '']
       if (firstSubjectName) {
         const subject = await db.subject.findFirst({
-          where: { name: { contains: firstSubjectName }, isActive: true },
+          where: { name: { contains: firstSubjectName, mode: 'insensitive' }, isActive: true },
         })
         if (subject) resolvedSubjectId = subject.id
       }

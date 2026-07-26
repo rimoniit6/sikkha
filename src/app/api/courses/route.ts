@@ -39,8 +39,8 @@ export async function GET(request: Request) {
         else if (price === 'paid') where.isPremium = true
         if (q) {
           where.OR = [
-            { title: { contains: q } },
-            { description: { contains: q } },
+            { title: { contains: q, mode: 'insensitive' } },
+            { description: { contains: q, mode: 'insensitive' } },
           ]
         }
 

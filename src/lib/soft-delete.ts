@@ -821,7 +821,7 @@ async function validateParentHierarchy(
 }
 
 // Label map for error messages (imported from trash/route.ts pattern)
-const MODEL_LABELS: Record<string, string> = {
+export const MODEL_LABELS: Record<string, string> = {
   classCategory: 'শ্রেণি',
   subject: 'বিষয়',
   chapter: 'অধ্যায়',
@@ -989,7 +989,7 @@ export async function previewForceDelete(
 }
 
 // Display fields map for preview
-const DISPLAY_FIELDS_MAP: Record<string, string[]> = {
+export const DISPLAY_FIELDS_MAP: Record<string, string[]> = {
   classCategory: ['name', 'slug'],
   subject: ['name', 'slug'],
   chapter: ['name', 'slug'],

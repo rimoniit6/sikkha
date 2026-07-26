@@ -59,7 +59,7 @@ export async function GET(request: Request) {
         const classId = searchParams.get('classId') || ''
 
         const where: Record<string, unknown> = {}
-        if (search) where.OR = [{ title: { contains: search } }, { description: { contains: search } }]
+        if (search) where.OR = [{ title: { contains: search, mode: 'insensitive' } }, { description: { contains: search, mode: 'insensitive' } }]
         if (status) where.status = status.toUpperCase()
         if (classId) where.classId = classId
 

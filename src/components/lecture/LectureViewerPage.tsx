@@ -3,11 +3,18 @@
 import BookmarkButton from '@/components/shared/BookmarkButton'
 import NoteEditor from '@/components/shared/NoteEditor'
 import PremiumLock from '@/components/shared/PremiumLock'
+import ReadingSettingsPanel from '@/components/lecture/ReadingSettingsPanel'
+import LocalNoteDrawer from '@/components/lecture/LocalNoteDrawer'
+import ImageLightbox from '@/components/lecture/ImageLightbox'
+import { useReadingSettings } from '@/hooks/use-reading-settings'
+import { useReadingSession } from '@/hooks/use-reading-session'
+import { useLocalNotes } from '@/hooks/use-local-notes'
 import { Badge } from '@/components/ui/badge'
 import { Breadcrumb,BreadcrumbItem,BreadcrumbLink,BreadcrumbList,BreadcrumbPage,BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
 import { Card,CardContent } from '@/components/ui/card'
 import ContentBlockEditor,{ deserializeBlocks } from '@/components/ui/content-block-editor'
+import { headingsFromBlocks } from '@/components/ui/content-block-types'
 import { Progress } from '@/components/ui/progress'
 import RichContentRenderer from '@/components/ui/rich-content-renderer'
 import SafeImage from '@/components/ui/safe-image'
@@ -27,6 +34,7 @@ Clock,
 Crown,
 Download,
 FileText,
+ListTree,
 Lock,
 Menu,Play,
 StickyNote,
@@ -82,21 +90,61 @@ export default function LectureViewerPage() {
     checked: boolean
   }>({ purchased: false, pendingPayment: false, rejected: false, checked: false })
   const [_isBookmarked, setIsBookmarked] = useState(false)
-  const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg'>('base')
   const [scrollProgress, setScrollProgress] = useState(0)
+  const [tocOpen, setTocOpen] = useState(false)
+  const [headings, setHeadings] = useState<{ id: string; text: string; level: number }[]>([])
+  const [headerHidden, setHeaderHidden] = useState(false)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [lightboxImages, setLightboxImages] = useState<{ src: string; alt: string }[]>([])
+  const [lightboxIndex, setLightboxIndex] = useState(0)
   const lastSentProgress = useRef(0)
   const progressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lectureIdRef = useRef<string | null>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const lastScrollY = useRef(0)
+  const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const { settings, updateSettings, contentClassName } = useReadingSettings()
+  const { sessionSeconds, totalSeconds, lastOpened, formatTime, formatDate } = useReadingSession(lectureData?.id ?? null)
+  const { notes: localNotes, loaded: localNotesLoaded, addNote: addLocalNote, updateNote: updateLocalNote, deleteNote: deleteLocalNote } = useLocalNotes(lectureData?.id ?? null)
+
+  // Reading progress + auto-hide header
   useEffect(() => {
     const onScroll = () => {
       const scrollTop = window.scrollY
       const docHeight = document.documentElement.scrollHeight - window.innerHeight
       setScrollProgress(docHeight > 0 ? Math.min(scrollTop / docHeight, 1) : 0)
+
+      // Auto-hide header on scroll down, show on scroll up
+      if (scrollTimer.current) clearTimeout(scrollTimer.current)
+      scrollTimer.current = setTimeout(() => {
+        const diff = scrollTop - lastScrollY.current
+        if (diff > 20 && scrollTop > 120) {
+          setHeaderHidden(true)
+        } else if (diff < -10 || scrollTop < 60) {
+          setHeaderHidden(false)
+        }
+        lastScrollY.current = scrollTop
+      }, 50)
     }
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      if (scrollTimer.current) clearTimeout(scrollTimer.current)
+    }
   }, [])
+
+  // Save scroll position to sessionStorage for resume-reading
+  useEffect(() => {
+    if (!lectureData?.id) return
+    const timer = setInterval(() => {
+      const scrollY = window.scrollY
+      if (scrollY > 0) {
+        sessionStorage.setItem(`lecture-scroll-${lectureData.id}`, String(scrollY))
+      }
+    }, 3000)
+    return () => clearInterval(timer)
+  }, [lectureData?.id])
 
   // Send scroll-based progress to server (debounced)
   useEffect(() => {
@@ -168,10 +216,38 @@ export default function LectureViewerPage() {
           setLectureData(null)
           return
         }
+
+        // Restore last scroll position for this lecture
+        const savedPos = sessionStorage.getItem(`lecture-scroll-${lectureId}`)
+
         const res = await fetch(`/api/lectures/${lectureId}`)
         if (!res.ok) throw new Error('Failed')
         const data = await res.json()
-        setLectureData(data.data)
+        const lectureObjData = data.data
+        setLectureData(lectureObjData)
+
+        // Extract headings from content blocks for Table of Contents
+        try {
+          const blocks = deserializeBlocks(lectureObjData.content)
+          const extracted = headingsFromBlocks(blocks)
+          if (extracted.length > 0) {
+            setHeadings(extracted)
+          }
+        } catch {
+          // Not block content — no TOC
+        }
+
+        // Auto-scroll to saved position after render
+        if (savedPos) {
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              const pos = parseInt(savedPos, 10)
+              if (!isNaN(pos) && pos > 0) {
+                window.scrollTo({ top: pos, behavior: 'instant' as ScrollBehavior })
+              }
+            })
+          })
+        }
 
         // Record recently viewed & update progress
         const lectureObj = data?.data
@@ -260,11 +336,54 @@ export default function LectureViewerPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="h-12 bg-muted" />
-        <div className="max-w-6xl mx-auto px-4 py-6">
-          <div className="flex gap-6">
-            <Skeleton className="hidden lg:block w-64 h-96 rounded-xl" />
-            <Skeleton className="flex-1 h-96 rounded-xl" />
+        {/* Sticky header skeleton */}
+        <div className="sticky top-0 z-40 bg-background border-b">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <Skeleton className="size-9 rounded-lg shrink-0" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-4 w-48 rounded" />
+              <Skeleton className="h-3 w-24 rounded" />
+            </div>
+            <Skeleton className="hidden sm:block size-9 rounded-lg" />
+          </div>
+          <Skeleton className="h-1 w-full rounded-none" />
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-4">
+          {/* Breadcrumb skeleton */}
+          <div className="flex items-center gap-2 mb-6">
+            <Skeleton className="h-3 w-12 rounded" />
+            <Skeleton className="h-3 w-3 rounded" />
+            <Skeleton className="h-3 w-16 rounded" />
+            <Skeleton className="h-3 w-3 rounded" />
+            <Skeleton className="h-3 w-20 rounded" />
+          </div>
+
+          {/* Title skeleton */}
+          <Skeleton className="h-8 w-3/4 rounded-lg mb-2" />
+          <Skeleton className="h-4 w-1/2 rounded-lg mb-8" />
+
+          {/* Video skeleton */}
+          <Skeleton className="aspect-video w-full rounded-xl mb-8" />
+
+          {/* Paragraph skeletons */}
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-full rounded" />
+            <Skeleton className="h-4 w-11/12 rounded" />
+            <Skeleton className="h-4 w-4/5 rounded" />
+            <Skeleton className="h-4 w-full rounded" />
+            <Skeleton className="h-4 w-3/4 rounded" />
+          </div>
+
+          {/* Image skeleton */}
+          <Skeleton className="aspect-video w-3/4 mx-auto rounded-xl my-8" />
+
+          {/* More paragraph skeletons */}
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-full rounded" />
+            <Skeleton className="h-4 w-5/6 rounded" />
+            <Skeleton className="h-4 w-full rounded" />
+            <Skeleton className="h-4 w-2/3 rounded" />
           </div>
         </div>
       </div>
@@ -419,9 +538,7 @@ export default function LectureViewerPage() {
       )}
 
       {/* Article Content */}
-      <div className={`max-w-none mb-8 animate-fade-in ${
-          fontSize === 'sm' ? 'text-sm' : fontSize === 'lg' ? 'text-lg' : 'text-base'
-        }`}
+      <div ref={contentRef} className={`${contentClassName} mb-8 animate-fade-in`}
       >
         {(() => {
           try {
@@ -480,18 +597,77 @@ export default function LectureViewerPage() {
     </>
   )
 
+  // Collect images from content blocks for lightbox
+  useEffect(() => {
+    if (!lectureData?.content) return
+    try {
+      const blocks = deserializeBlocks(lectureData.content)
+      const imgs = blocks
+        .filter((b) => b.type === 'image' && (b as any).url)
+        .map((b: any) => ({ src: b.url, alt: b.caption || lectureData.title }))
+      if (imgs.length > 0) setLightboxImages(imgs)
+    } catch { /* ignore */ }
+  }, [lectureData?.content, lectureData?.title])
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background transition-colors duration-200">
+      {/* Image Lightbox */}
+      {lightboxOpen && lightboxImages.length > 0 && (
+        <ImageLightbox
+          images={lightboxImages}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
+
       {/* Reading progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 h-0.5 bg-muted">
+      <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-muted/60">
         <div
-          className="h-full bg-edu-primary transition-transform duration-150 origin-left"
+          className="h-full bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 transition-transform duration-150 origin-left shadow-sm shadow-emerald-500/20"
           style={{ transform: `scaleX(${scrollProgress})` }}
         />
       </div>
 
-      {/* Progress Bar */}
-      <div className="sticky top-0 z-40 bg-background border-b">
+      {/* Floating Table of Contents Sheet */}
+      <Sheet open={tocOpen} onOpenChange={setTocOpen}>
+        <SheetContent side="right" className="w-72 sm:w-80">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="flex items-center gap-2 text-base">
+              <ListTree className="size-4" />
+              বিষয়সূচী
+            </SheetTitle>
+          </SheetHeader>
+          {headings.length === 0 ? (
+            <p className="text-sm text-muted-foreground">কোনো শিরোনাম পাওয়া যায়নি</p>
+          ) : (
+            <nav className="space-y-1">
+              {headings.map((h, idx) => (
+                <button
+                  key={h.id}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors hover:bg-muted ${
+                    h.level === 2 ? 'font-medium' : 'text-muted-foreground ml-4'
+                  }`}
+                  onClick={() => {
+                    const el = document.getElementById(h.id)
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      setTocOpen(false)
+                    }
+                  }}
+                >
+                  <span className="text-xs text-muted-foreground/50 mr-2 tabular-nums">{idx + 1}.</span>
+                  {h.text}
+                </button>
+              ))}
+            </nav>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Header — auto-hides on scroll down (respects reduced motion) */}
+      <div className={`sticky top-0 z-40 bg-background border-b motion-safe:transition-transform motion-safe:duration-300 ${
+        headerHidden ? '-translate-y-full' : 'translate-y-0'
+      }`}>
         <div className="flex items-center gap-3 px-4 py-2">
           {/* Mobile menu */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -544,24 +720,32 @@ export default function LectureViewerPage() {
               <span>{lectureData.className}</span>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Font size controls — visible on all screens */}
-            <div className="flex items-center gap-0.5 border border-border/50 rounded-lg p-0.5">
-              {(['sm', 'base', 'lg'] as const).map((size) => (
-                <button
-                  key={size}
-                  onClick={() => setFontSize(size)}
-                  className={`px-2 py-1.5 rounded-md text-xs font-medium transition-colors min-h-[32px] min-w-[32px] ${
-                    fontSize === size
-                      ? 'bg-edu-primary/10 text-edu-primary'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                  aria-label={size === 'sm' ? 'ছোট ফন্ট' : size === 'base' ? 'স্বাভাবিক ফন্ট' : 'বড় ফন্ট'}
-                >
-                  {size === 'sm' ? 'A' : size === 'base' ? 'A' : 'A'}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-0.5 sm:gap-1">
+            {/* TOC button — desktop only */}
+            {headings.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden sm:flex size-9 text-muted-foreground"
+                onClick={() => setTocOpen(true)}
+                aria-label="বিষয়সূচী"
+              >
+                <ListTree className="size-4" />
+              </Button>
+            )}
+
+            {/* Reading Settings Panel — replaces old font size controls */}
+            <ReadingSettingsPanel settings={settings} onUpdate={updateSettings} />
+
+            {/* Local Notes Drawer */}
+            <LocalNoteDrawer
+              notes={localNotes}
+              loaded={localNotesLoaded}
+              onAdd={addLocalNote}
+              onUpdate={updateLocalNote}
+              onDelete={deleteLocalNote}
+            />
+
             <BookmarkButton
               contentId={lectureData.id}
               contentType="lecture"
@@ -571,9 +755,17 @@ export default function LectureViewerPage() {
               className="text-muted-foreground hover:text-amber-600"
               onToggle={(b) => setIsBookmarked(b)}
             />
-            <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="size-4" />
-              <span>{lectureData.progress}% সম্পন্ন</span>
+            <div className="hidden sm:flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1" title={`মোট ${formatTime(totalSeconds)} পড়া`}>
+                <Clock className="size-3.5" />
+                <span>{formatTime(sessionSeconds)}</span>
+              </div>
+              {lastOpened && (
+                <div className="flex items-center gap-1 text-[10px]" title="শেষবার খোলা">
+                  <span className="text-muted-foreground/50">|</span>
+                  <span>{formatDate(lastOpened)}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -659,9 +851,11 @@ export default function LectureViewerPage() {
               </>
             )}
 
-            {/* Next/Previous Navigation */}
+            {/* Bottom Learning Bar — mobile sticky, desktop inline */}
             <Separator className="my-6" />
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            
+            {/* Desktop: inline navigation */}
+            <div className="hidden sm:flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <Button
                 variant="outline"
                 className="gap-2 justify-start min-h-[44px]"
@@ -681,7 +875,7 @@ export default function LectureViewerPage() {
                 <ArrowLeft className="size-4" />
                 আগের লেকচার
               </Button>
-              <span className="text-sm text-muted-foreground text-center sm:text-left">
+              <span className="text-sm text-muted-foreground text-center">
                 {lectureData.currentIndex + 1} / {lectureData.lectures.length}
               </span>
               <Button
@@ -703,6 +897,78 @@ export default function LectureViewerPage() {
                 <ArrowRight className="size-4" />
               </Button>
             </div>
+
+            {/* Mobile: sticky bottom learning bar */}
+            <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-md safe-bottom pb-safe">
+              <div className="flex items-center justify-between gap-1 px-2 py-1.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex-1 gap-1.5 h-11 text-xs font-medium min-w-0"
+                  disabled={!hasPrev}
+                  onClick={() => {
+                    if (hasPrev) {
+                      const prev = lectureData.lectures[lectureData.currentIndex - 1]
+                      navigate('lecture-viewer', {
+                        lectureId: prev.id,
+                        chapterId: lectureData.chapterId,
+                        subjectId: lectureData.subjectId,
+                        classSlug: lectureData.classSlug,
+                      })
+                    }
+                  }}
+                >
+                  <ArrowLeft className="size-4 shrink-0" />
+                  <span className="truncate">পূর্ববর্তী</span>
+                </Button>
+
+                <div className="flex items-center gap-0.5">
+                  {headings.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-11"
+                      onClick={() => setTocOpen(true)}
+                      aria-label="বিষয়সূচী"
+                    >
+                      <ListTree className="size-5" />
+                    </Button>
+                  )}
+                  <BookmarkButton
+                    contentId={lectureData.id}
+                    contentType="lecture"
+                    contentTitle={lectureData.title}
+                    size="icon"
+                    variant="ghost"
+                    className="size-11 text-muted-foreground hover:text-amber-600"
+                    onToggle={setIsBookmarked}
+                  />
+                </div>
+
+                <Button
+                  size="sm"
+                  className="flex-1 gap-1.5 h-11 text-xs font-medium min-w-0"
+                  disabled={!hasNext}
+                  onClick={() => {
+                    if (hasNext) {
+                      const next = lectureData.lectures[lectureData.currentIndex + 1]
+                      navigate('lecture-viewer', {
+                        lectureId: next.id,
+                        chapterId: lectureData.chapterId,
+                        subjectId: lectureData.subjectId,
+                        classSlug: lectureData.classSlug,
+                      })
+                    }
+                  }}
+                >
+                  <span className="truncate">পরবর্তী</span>
+                  <ArrowRight className="size-4 shrink-0" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Bottom padding for mobile sticky bar */}
+            <div className="sm:hidden h-[4.5rem]" />
           </main>
 
           {/* Right Panel - Desktop */}

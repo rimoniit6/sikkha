@@ -33,8 +33,8 @@ export async function GET(request: Request) {
     if (chapterId) where.chapterId = chapterId
     if (search) {
       where.OR = [
-        { title: { contains: search } },
-        { content: { contains: search } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
       ]
     }
 

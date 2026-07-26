@@ -24,6 +24,20 @@ const TYPE_COLORS: Record<string, string> = {
   ERROR: 'text-red-500',
 }
 
+const PRIORITY_BADGES: Record<string, { label: string; className: string }> = {
+  critical: { label: 'জরুরি', className: 'bg-red-500/15 text-red-500 border-red-500/30' },
+  high: { label: 'গুরুত্বপূর্ণ', className: 'bg-orange-500/15 text-orange-500 border-orange-500/30' },
+  medium: { label: 'মাঝারি', className: 'bg-blue-500/15 text-blue-500 border-blue-500/30' },
+  low: { label: 'সাধারণ', className: 'bg-gray-500/15 text-gray-500 border-gray-500/30' },
+}
+
+const PRIORITY_BORDER: Record<string, string> = {
+  critical: 'border-l-2 border-l-red-500',
+  high: 'border-l-2 border-l-orange-500',
+  medium: '',
+  low: '',
+}
+
 function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr)
   const now = new Date()
@@ -119,14 +133,19 @@ export default function NotificationBell() {
                     key={notification.id}
                     className={`w-full text-left px-4 py-3 hover:bg-accent/50 transition-colors ${
                       !notification.isRead ? 'bg-accent/20' : ''
-                    }`}
+                    } ${PRIORITY_BORDER[notification.priority || 'medium']}`}
                     onClick={() => handleNotificationClick(notification)}
                   >
                     <div className="flex items-start gap-3">
                       <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${iconColor}`} />
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <p className="text-sm font-medium truncate">{notification.title}</p>
+                          {notification.priority && notification.priority !== 'medium' && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${PRIORITY_BADGES[notification.priority]?.className || ''}`}>
+                              {PRIORITY_BADGES[notification.priority]?.label || notification.priority}
+                            </span>
+                          )}
                           {!notification.isRead && (
                             <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
                           )}

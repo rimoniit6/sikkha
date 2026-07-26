@@ -43,8 +43,8 @@ export async function GET(request: Request) {
 
     if (search) {
       where.OR = [
-        { title: { contains: search } },
-        { content: { contains: search } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { content: { contains: search, mode: 'insensitive' } },
       ]
     }
     if (classId) where.classId = classId

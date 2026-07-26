@@ -64,11 +64,11 @@ export async function GET(request: Request) {
 
     if (q) {
       where.OR = [
-        { uddeepok: { contains: q } },
-        { question1: { contains: q } },
-        { question2: { contains: q } },
-        { question3: { contains: q } },
-        { question4: { contains: q } },
+        { uddeepok: { contains: q, mode: 'insensitive' } },
+        { question1: { contains: q, mode: 'insensitive' } },
+        { question2: { contains: q, mode: 'insensitive' } },
+        { question3: { contains: q, mode: 'insensitive' } },
+        { question4: { contains: q, mode: 'insensitive' } },
       ]
     }
     if (classLevel) where.classLevel = classLevel

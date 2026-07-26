@@ -16,7 +16,6 @@
  */
 
 import { PrismaClient } from '@prisma/client'
-import { PrismaLibSql } from '@prisma/adapter-libsql'
 import { softDelete, restore, forceDelete, SOFT_DELETE_MODELS, PRISMA_MODEL_MAP } from './src/lib/soft-delete'
 import { getContentVersion } from './src/lib/cache-invalidate'
 import type { CacheableContent } from './src/lib/cache-invalidate'
@@ -38,9 +37,7 @@ function injectSoftDeleteFilter(args: Record<string, unknown>): void {
   }
 }
 
-const basePrisma = new PrismaClient({
-  adapter: new PrismaLibSql({ url: process.env.DATABASE_URL! }),
-})
+const basePrisma = new PrismaClient()
 
 const prisma = basePrisma.$extends({
   query: {

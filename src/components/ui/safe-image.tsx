@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getFileUrl, getImagePlaceholder } from '@/lib/file-url'
 import { cn } from '@/lib/utils'
 import { useImageViewer } from '@/providers/ImageViewerProvider'
@@ -22,6 +22,8 @@ interface SafeImageProps {
   onClick?: React.MouseEventHandler<HTMLDivElement | HTMLImageElement>
   /** When true, clicking the image opens the global image viewer. Default: true */
   clickable?: boolean
+  /** Fade-in effect on image load. Default: true */
+  fadeIn?: boolean
 }
 
 export default function SafeImage({
@@ -38,8 +40,12 @@ export default function SafeImage({
   style,
   onClick,
   clickable = true,
+  fadeIn = true,
 }: SafeImageProps) {
   const [error, setError] = useState(false)
+  const [loaded, setLoaded] = useState(false)
+  const mountedRef = useRef(true)
+  const imgRef = useRef<HTMLImageElement | null>(null)
   const resolvedSrc = src ? getFileUrl(src) : ''
   const imgSrc = !resolvedSrc
     ? (fallback || getImagePlaceholder())
@@ -48,6 +54,21 @@ export default function SafeImage({
       : resolvedSrc
 
   const viewer = useImageViewer()
+
+  useEffect(() => {
+    return () => { mountedRef.current = false }
+  }, [])
+
+  // Check if image is already cached (avoids invisible image on fast connections)
+  useEffect(() => {
+    if (imgRef.current?.complete && !loaded) {
+      setLoaded(true)
+    }
+  }, [resolvedSrc, loaded])
+
+  const handleLoad = useCallback(() => {
+    if (mountedRef.current) setLoaded(true)
+  }, [])
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement | HTMLImageElement>) => {
@@ -60,6 +81,14 @@ export default function SafeImage({
     [onClick, clickable, resolvedSrc, error, viewer, alt],
   )
 
+  const imgClasses = cn(
+    clickable && resolvedSrc && !error ? 'cursor-pointer' : '',
+    objectFit === 'contain' ? 'object-contain' : 'object-cover',
+    fadeIn && 'motion-safe:transition-opacity motion-safe:duration-300',
+    fadeIn && !loaded && 'opacity-0',
+    fadeIn && loaded && 'opacity-100',
+  )
+
   const hasExplicitDimensions = width !== undefined || height !== undefined
 
   if (hasExplicitDimensions) {
@@ -67,11 +96,7 @@ export default function SafeImage({
       <Image
         src={imgSrc}
         alt={alt}
-        className={cn(
-          clickable && resolvedSrc && !error ? 'cursor-pointer' : '',
-          objectFit === 'contain' ? 'object-contain' : 'object-cover',
-          className,
-        )}
+        className={cn(imgClasses, className)}
         width={width || 400}
         height={height || 300}
         priority={priority}
@@ -79,7 +104,9 @@ export default function SafeImage({
         sizes={sizes || "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"}
         style={style}
         onClick={handleClick}
-        onError={() => setError(true)}
+        onError={() => { setError(true); setLoaded(true) }}
+        onLoad={handleLoad}
+        ref={imgRef}
       />
     )
   }
@@ -98,11 +125,13 @@ export default function SafeImage({
         src={imgSrc}
         alt={alt}
         fill
-        className={objectFit === 'contain' ? 'object-contain' : 'object-cover'}
+        className={imgClasses}
         priority={priority}
         loading={loading}
         sizes={sizes || "(max-width: 768px) 100vw, 33vw"}
-        onError={() => setError(true)}
+        onError={() => { setError(true); setLoaded(true) }}
+        onLoad={handleLoad}
+        ref={imgRef}
       />
     </div>
   )

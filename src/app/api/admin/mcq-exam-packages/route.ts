@@ -75,13 +75,13 @@ const bulkCreateSetsSchema = z.object({
 // Helper: recalculate totalQuestions and totalMarks for an exam set
 // When called inside $transaction, pass the tx client so queries run on the
 // same connection and see uncommitted writes from the transaction.
-async function recalculateSetTotals(setId: string, client: typeof db = db) {
+async function recalculateSetTotals(setId: string, client: any = db) {
   const questions = await client.mCQExamSetQuestion.findMany({
     where: { setId },
   })
 
   const totalQuestions = questions.length
-  const totalMarks = questions.reduce((sum, q) => sum + toDecimal(q.marks), 0)
+  const totalMarks = questions.reduce((sum: number, q: { marks: number }) => sum + toDecimal(q.marks), 0)
 
   await client.mCQExamSet.update({
     where: { id: setId },
@@ -129,8 +129,8 @@ export async function GET(request: Request) {
 
         if (search) {
           where.OR = [
-            { title: { contains: search } },
-            { description: { contains: search } },
+            { title: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
           ]
         }
         if (classId) where.classId = classId
@@ -280,9 +280,9 @@ export async function GET(request: Request) {
         if (chapterId) where.chapterId = chapterId
         if (search) {
           where.OR = [
-            { question: { contains: search } },
-            { explanation: { contains: search } },
-            { tags: { contains: search } },
+            { question: { contains: search, mode: 'insensitive' } },
+            { explanation: { contains: search, mode: 'insensitive' } },
+            { tags: { contains: search, mode: 'insensitive' } },
           ]
         }
 

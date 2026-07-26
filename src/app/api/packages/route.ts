@@ -25,11 +25,11 @@ export async function GET(request: Request) {
 
     if (search && classLevel) {
       where.AND = [
-        { OR: [{ title: { contains: search } }, { description: { contains: search } }] },
+        { OR: [{ title: { contains: search, mode: 'insensitive' } }, { description: { contains: search, mode: 'insensitive' } }] },
         { OR: [{ classLevel: classLevel }, { classLevel: null }] },
       ]
     } else if (search) {
-      where.OR = [{ title: { contains: search } }, { description: { contains: search } }]
+      where.OR = [{ title: { contains: search, mode: 'insensitive' } }, { description: { contains: search, mode: 'insensitive' } }]
     } else if (classLevel) {
       where.OR = [{ classLevel: classLevel }, { classLevel: null }]
     }

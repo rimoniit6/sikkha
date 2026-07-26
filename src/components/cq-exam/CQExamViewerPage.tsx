@@ -11,7 +11,6 @@ DialogFooter,
 DialogHeader,
 DialogTitle,
 } from '@/components/ui/dialog'
-import { Progress } from '@/components/ui/progress'
 import RichContentRenderer from '@/components/ui/rich-content-renderer'
 import SafeImage from '@/components/ui/safe-image'
 import { Separator } from '@/components/ui/separator'
@@ -25,6 +24,7 @@ import { cn,toBengaliNumerals } from '@/lib/utils'
 import { useShallowAuth } from '@/store/auth'
 import { useRouterStore, useRouteParams } from '@/store/router'
 import { useImageViewer } from '@/providers/ImageViewerProvider'
+import { useCQDraft } from '@/hooks/use-cq-draft'
 import { AnimatePresence,motion } from 'framer-motion'
 import {
 AlertCircle,
@@ -40,6 +40,8 @@ Loader2,
 Send,
 Timer,
 X,
+BookOpen,
+PenLine,
 } from 'lucide-react'
 import { useCallback,useEffect,useRef,useState } from 'react'
 
@@ -161,7 +163,7 @@ function NonCQQuestionBlock({
   })()
 
   return (
-    <Card className="border-border/50 overflow-hidden">
+    <Card id={`cq-${question.id}`} className="border-border/50 overflow-hidden motion-safe:animate-fade-in motion-safe:animate-slide-up">
       <button type="button" onClick={onToggle} className="w-full text-left">
         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-teal-50/50 dark:from-emerald-950/30 dark:to-teal-950/20">
           <div className="flex items-center gap-3">
@@ -313,14 +315,29 @@ function NonCQQuestionBlock({
                 const key = `${question.id}-0`
                 const ans = answers[key] || { answerText: '', images: [] }
                 return (
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <Textarea
                       placeholder="আপনার উত্তর লিখুন... (প্রয়োজনে নিচে থেকে ছবি সংযুক্ত করতে পারেন)"
                       value={ans.answerText || ''}
                       onChange={(e) => onAnswerChange(question.id, 0, e.target.value)}
                       rows={8}
-                      className="text-base min-h-[200px]"
+                      className="text-base min-h-[200px] w-full resize-y focus-visible:ring-emerald-400/50"
+                      onInput={(e) => {
+                        const target = e.currentTarget
+                        target.style.height = 'auto'
+                        target.style.height = target.scrollHeight + 'px'
+                      }}
                     />
+                    <div className="flex items-center justify-between text-[10px] text-muted-foreground/60 px-0.5">
+                      <span>
+                        {toBengaliNumerals((ans.answerText || '').length)} অক্ষর
+                      </span>
+                      {(ans.answerText || '').trim() && (
+                        <span>
+                          ~{toBengaliNumerals(Math.max(1, Math.ceil((ans.answerText || '').trim().split(/\s+/).length)))} শব্দ
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )
               })()}
@@ -480,7 +497,7 @@ function CQBlock({
   })()
 
   return (
-    <Card className="border-border/50 overflow-hidden">
+    <Card id={`cq-${question.id}`} className="border-border/50 overflow-hidden motion-safe:animate-fade-in motion-safe:animate-slide-up">
       <button type="button" onClick={onToggle} className="w-full text-left">
         <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-teal-50/50 dark:from-emerald-950/30 dark:to-teal-950/20">
           <div className="flex items-center gap-3">
@@ -590,13 +607,30 @@ function CQBlock({
                     <div className="flex gap-2">
                       {/* Textarea: shown in flexible and text-only modes */}
                       {answerMode !== 'image-only' && (
-                        <Textarea
-                          placeholder={`প্রশ্ন ${bengaliLabels[si]}-এর উত্তর লিখুন...`}
-                          value={ans.answerText || ''}
-                          onChange={(e) => onAnswerChange(question.id, si, e.target.value)}
-                          rows={4}
-                          className="text-base min-h-[100px] flex-1"
-                        />
+                        <div className="flex-1 space-y-1.5">
+                          <Textarea
+                            placeholder={`প্রশ্ন ${bengaliLabels[si]}-এর উত্তর লিখুন...`}
+                            value={ans.answerText || ''}
+                            onChange={(e) => onAnswerChange(question.id, si, e.target.value)}
+                            rows={4}
+                            className="text-base min-h-[100px] w-full resize-y focus-visible:ring-emerald-400/50"
+                            onInput={(e) => {
+                              const target = e.currentTarget
+                              target.style.height = 'auto'
+                              target.style.height = target.scrollHeight + 'px'
+                            }}
+                          />
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground/60 px-0.5">
+                            <span>
+                              {toBengaliNumerals((ans.answerText || '').length)} অক্ষর
+                            </span>
+                            {(ans.answerText || '').trim() && (
+                              <span>
+                                ~{toBengaliNumerals(Math.max(1, Math.ceil((ans.answerText || '').trim().split(/\s+/).length)))} শব্দ
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       )}
                       {/* Image upload button: shown in flexible and image-only modes */}
                       {answerMode !== 'text-only' && (
@@ -1020,20 +1054,85 @@ export default function CQExamViewerPage() {
     }
   }, [timeRemaining, examStarted, submissionId])
 
+  // ── Draft auto-save and restore (safe defaults before early returns) ──
+  const pendingQuestions = setData?.questions || []
+  const pendingAnswered = pendingQuestions.reduce((sum, q) => sum + (q.type === 'cq' || (q.type || 'cq').toLowerCase() === 'typed' ? 0 : 0), 0)
+  const pendingSubQuestions = pendingQuestions.reduce((sum) => sum + 1, 0)
+  const cqDraft = useCQDraft(setId, answers, pendingSubQuestions, pendingAnswered)
+  const draftRestoredRef = useRef(false)
+  useEffect(() => {
+    if (!examStarted || draftRestoredRef.current) return
+    const serverAnswersExist = questions.length > 0 && Object.keys(answerIdMap).length > 0
+    if (!serverAnswersExist) return
+
+    const draft = cqDraft.loadDraft()
+    if (draft && draft.answers && Object.keys(draft.answers).length > 0) {
+      const hasLocalContent = Object.values(draft.answers).some(a => a.answerText?.trim())
+      if (hasLocalContent) {
+        setAnswers((prev) => {
+          const newState = { ...prev }
+          for (const [key, val] of Object.entries(draft.answers)) {
+            if (!newState[key]?.answerText?.trim() && val.answerText?.trim()) {
+              newState[key] = { ...(newState[key] || { answerText: '', images: [] }), answerText: val.answerText }
+            }
+          }
+          return newState
+        })
+      }
+    }
+    draftRestoredRef.current = true
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [examStarted, answerIdMap, pendingQuestions.length, cqDraft])
+
   if (loading) {
     return (
       <div>
-        <div className="sticky top-16 z-40 bg-background border-b">
-          <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
-            <Skeleton className="size-10 rounded-md" />
+        {/* Premium loading skeleton matching real layout */}
+        <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-sm border-b">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
+            <Skeleton className="size-9 rounded-lg" />
             <div className="flex-1">
-              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-40 mb-1.5" />
+              <Skeleton className="h-3 w-24" />
             </div>
+            <Skeleton className="h-7 w-16 rounded-full" />
           </div>
+          <div className="h-1 bg-muted/30"><div className="h-full w-0 bg-emerald-400" /></div>
         </div>
         <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 rounded-xl" />
+            <div key={i} className="bg-card rounded-xl border border-border/50 overflow-hidden">
+              {/* Question header skeleton */}
+              <div className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50" />
+                  <div>
+                    <div className="h-4 w-24 bg-muted rounded mb-1" />
+                    <div className="h-3 w-32 bg-muted rounded" />
+                  </div>
+                </div>
+                <div className="h-5 w-16 bg-muted rounded-full" />
+              </div>
+              {/* Stimulus skeleton */}
+              <div className="px-4 pb-4 space-y-3">
+                <div className="h-3 w-16 bg-muted rounded" />
+                <div className="rounded-lg bg-muted/30 p-4 border space-y-2">
+                  <div className="h-3 bg-muted rounded w-full" />
+                  <div className="h-3 bg-muted rounded w-5/6" />
+                  <div className="h-3 bg-muted rounded w-2/3" />
+                </div>
+                {/* Sub-question skeletons */}
+                {[0,1].map((j) => (
+                  <div key={j} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="size-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50" />
+                      <div className="h-3 w-20 bg-muted rounded" />
+                    </div>
+                    <div className="h-24 bg-muted/20 rounded-lg border" />
+                  </div>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -1186,36 +1285,54 @@ export default function CQExamViewerPage() {
 
   return (
     <div>
-      <div className="sticky top-16 z-40 bg-background border-b">
+      <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-sm border-b">
         <div className="flex items-center justify-between px-4 py-2.5 max-w-4xl mx-auto">
           <div className="flex items-center gap-3 min-w-0">
             <Button
               variant="ghost"
               size="icon"
+              className="size-9 shrink-0"
               onClick={() => {
                 if (timerRef.current) clearInterval(timerRef.current)
                 navigate('cq-exam-package-detail', { packageId })
               }}
             >
-              <ArrowLeft className="size-5" />
+              <ArrowLeft className="size-4" />
             </Button>
             <div className="min-w-0">
               <p className="font-medium text-sm truncate">{setData.set.title}</p>
-              <p className="text-xs text-muted-foreground">
-                {toBengaliNumerals(totalAnswered)}/{toBengaliNumerals(totalSubQuestions)} উত্তর দেওয়া হয়েছে
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground font-mono">
+                  <span className="text-foreground font-semibold">{toBengaliNumerals(totalAnswered)}</span>
+                  {'/'}{toBengaliNumerals(totalSubQuestions)}
+                </span>
+                <span className="text-[10px] text-muted-foreground/60">|</span>
+                <span className="text-xs text-muted-foreground">
+                  {toBengaliNumerals(totalSubQuestions - totalAnswered)} বাকি
+                </span>
+              </div>
             </div>
           </div>
 
-          <Badge
-            variant={timeRemaining < 300 ? 'destructive' : 'secondary'}
-            className="gap-1.5 tabular-nums shrink-0"
-          >
-            <Clock className="size-3.5" />
-            {formatTime(timeRemaining)}
-          </Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge
+              variant={timeRemaining < 60 ? 'destructive' : 'secondary'}
+              className={`gap-1.5 tabular-nums h-7 ${timeRemaining < 300 && timeRemaining >= 60 ? 'text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700' : ''}`}
+            >
+              <Clock className="size-3" />
+              {formatTime(timeRemaining)}
+            </Badge>
+          </div>
         </div>
-        <Progress value={progressPercent} className="h-1 rounded-none" />
+        <div className="relative h-1 bg-muted/30">
+          <div
+            className="absolute inset-y-0 left-0 transition-all duration-500 ease-out rounded-r-full"
+            style={{
+              width: `${progressPercent}%`,
+              background: 'linear-gradient(90deg, #10b981, #06b6d4, #3b82f6)',
+            }}
+          />
+        </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-4">
@@ -1242,7 +1359,8 @@ export default function CQExamViewerPage() {
           />
         ))}
 
-        <div className="flex justify-center pt-4 pb-8">
+        {/* Desktop submit button */}
+        <div className="hidden sm:flex justify-center pt-4 pb-8">
           <Button
             className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white min-w-[200px]"
             onClick={() => setSubmitDialogOpen(true)}
@@ -1252,34 +1370,135 @@ export default function CQExamViewerPage() {
             {submitting ? 'জমা হচ্ছে...' : 'পরীক্ষা জমা দিন'}
           </Button>
         </div>
+
+        {/* Mobile sticky bottom bar */}
+        <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border/50 safe-bottom">
+          <div className="flex items-center justify-between px-2 py-2 gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // Find the first visible (expanded) CQ that isn't the first question
+                let prevIdx = -1
+                for (let i = 0; i < questions.length; i++) {
+                  if (!(collapsedCQs[questions[i].id] ?? i !== 0)) {
+                    if (i > 0) prevIdx = i - 1
+                    break
+                  }
+                }
+                if (prevIdx >= 0) {
+                  const prev = questions[prevIdx]
+                  const firstExpanded = questions.findIndex(q => !(collapsedCQs[q.id] ?? q.id !== questions[0].id))
+                  if (firstExpanded >= 0) {
+                    setCollapsedCQs(state => ({ ...state, [prev.id]: false, [questions[firstExpanded].id]: true }))
+                  }
+                  setTimeout(() => document.getElementById(`cq-${prev.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100)
+                }
+              }}
+              className="gap-1 h-11 flex-1 min-w-0"
+            >
+              <span className="text-xs truncate">পূর্ববর্তী</span>
+            </Button>
+
+            <div className="flex items-center gap-1 px-1 shrink-0">
+              <span className="text-[10px] text-muted-foreground font-mono">
+                {toBengaliNumerals(totalAnswered)}/{toBengaliNumerals(totalSubQuestions)}
+              </span>
+            </div>
+
+            <Button
+              size="sm"
+              onClick={() => setSubmitDialogOpen(true)}
+              disabled={submitting}
+              className="gap-1.5 h-11 flex-1 min-w-0 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+            >
+              {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+              <span className="text-xs">জমা দিন</span>
+            </Button>
+          </div>
+        </div>
+        {/* Bottom spacer for mobile bar */}
+        <div className="sm:hidden h-[4.5rem]" />
       </div>
 
       {/* ─── Submit Confirmation Dialog ─────────────────────────────────── */}
       <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>পরীক্ষা জমা দিন</DialogTitle>
             <DialogDescription>
-              আপনি {toBengaliNumerals(totalAnswered)}টি প্রশ্নের উত্তর দিয়েছেন।{' '}
-              {toBengaliNumerals(totalSubQuestions - totalAnswered)}টি প্রশ্ন বাকি আছে।
-              আপনি কি নিশ্চিতভাবে জমা দিতে চান?
+              আপনার উত্তর জমা দেওয়ার পূর্বে যাচাই করুন
             </DialogDescription>
           </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            {/* Progress summary */}
+            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border">
+              <span className="text-sm font-medium">প্রশ্নের উত্তর</span>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle className="size-3.5" />
+                  {toBengaliNumerals(totalAnswered)} উত্তর
+                </span>
+                <span className="text-muted-foreground">|</span>
+                <span className="flex items-center gap-1.5 text-muted-foreground">
+                  <PenLine className="size-3.5" />
+                  {toBengaliNumerals(totalSubQuestions - totalAnswered)} বাকি
+                </span>
+              </div>
+            </div>
+
+            {/* Question-by-question review */}
+            <div className="space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin">
+              {questions.map((q, idx) => {
+                const answered = countAnswersForQuestion(q)
+                const totalSub = subQuestionCountForQuestion(q)
+                return (
+                  <div
+                    key={q.id}
+                    className="flex items-center justify-between p-2 rounded-lg border border-border/50 text-xs"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="flex items-center justify-center size-5 rounded-full bg-muted font-semibold text-[10px] shrink-0">
+                        {toBengaliNumerals(idx + 1)}
+                      </span>
+                      <span className="truncate text-muted-foreground">
+                        {q.type === 'cq' || q.type === 'typed' ? `CQ ${toBengaliNumerals(idx + 1)}` : getTypeLabel(q.type || 'mcq-single')}
+                      </span>
+                    </div>
+                    <span className={cn(
+                      'font-mono text-[10px] shrink-0 ml-2',
+                      answered === totalSub ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
+                    )}>
+                      {toBengaliNumerals(answered)}/{toBengaliNumerals(totalSub)}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+
+            <DialogDescription className="text-xs text-center pt-1">
+              আপনি কি নিশ্চিতভাবে পরীক্ষা জমা দিতে চান?
+            </DialogDescription>
+          </div>
+
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => setSubmitDialogOpen(false)}
               disabled={submitting}
+              className="flex-1 sm:flex-none"
             >
               বাতিল
             </Button>
             <Button
               onClick={() => {
                 setSubmitDialogOpen(false)
+                cqDraft.clearDraft()
                 handleSubmitExam()
               }}
               disabled={submitting}
-              className="gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+              className="gap-2 flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
             >
               {submitting ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               {submitting ? 'জমা হচ্ছে...' : 'জমা দিন'}

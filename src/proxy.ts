@@ -114,7 +114,8 @@ async function getAuthFromCookie(request: NextRequest): Promise<{ userId: string
     })
     return { userId: payload.userId, role: dbUser?.role ?? payload.role }
   } catch {
-    return payload
+    // DB failure — return null to force re-authentication rather than using stale JWT role
+    return null
   }
 }
 

@@ -25,6 +25,7 @@ import { Color } from '@tiptap/extension-color'
 import HighlightExt from '@tiptap/extension-highlight'
 import StarterKit from '@tiptap/starter-kit'
 import { EditorContent, ReactNodeViewRenderer, useEditor } from '@tiptap/react'
+import type { NodeViewRenderer } from '@tiptap/core'
 import ImageResizeNodeView from '@/components/ui/image-resize-node-view'
 import { useUploadThing } from '@/lib/upload/client'
 import {
@@ -355,7 +356,7 @@ const BlogCustomImage = ImageExt.configure({ inline: false, allowBase64: false }
     }
   },
   addNodeView() {
-    return ReactNodeViewRenderer(ImageResizeNodeView)
+    return ReactNodeViewRenderer(ImageResizeNodeView) as unknown as NodeViewRenderer
   },
 })
 

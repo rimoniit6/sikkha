@@ -85,7 +85,7 @@ export function BoardManager({
     }
     setSaving(true)
     try {
-      const slug = boardForm.slug || generateSlug(boardForm.name)
+      const slug = boardForm.slug || slugify(boardForm.name)
       const body = {
         ...(editingBoard ? { id: editingBoard.id } : {}),
         name: boardForm.name,

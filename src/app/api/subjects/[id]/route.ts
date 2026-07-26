@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { handleApiError } from '@/lib/errors'
@@ -135,37 +136,37 @@ export async function GET(
     const freeSuggestionCount = Number(sr.freeSuggestionCount)
     const freeExamCount = Number(sr.freeExamCount)
 
-    // Per-chapter free counts — single aggregated query (SQLite-compatible IN)
+    // Per-chapter free counts — single aggregated query
     const chapterIds = subject.chapters.map(ch => ch.id)
-    const chapterPlaceholders = chapterIds.map(() => '?').join(',')
     const perChapterRows = chapterIds.length > 0
-      ? await db.$queryRawUnsafe<
+      ? await db.$queryRaw<
           Array<{ type: string; chapterId: string; count: number }>
         >(
-          `SELECT 'lecture' as "type", "chapterId", COUNT(*) as "count"
-           FROM "Lecture" WHERE "chapterId" IN (${chapterPlaceholders}) AND "isActive" = true AND "deletedAt" IS NULL AND "isPremium" = false
-           GROUP BY "chapterId"
-           UNION ALL
-           SELECT 'mcq' as "type", "chapterId", COUNT(*) as "count"
-           FROM "MCQ" WHERE "chapterId" IN (${chapterPlaceholders}) AND "isActive" = true AND "deletedAt" IS NULL AND "isPremium" = false
-           GROUP BY "chapterId"
-           UNION ALL
-           SELECT 'cq' as "type", "chapterId", COUNT(*) as "count"
-           FROM "CQ" WHERE "chapterId" IN (${chapterPlaceholders}) AND "isActive" = true AND "deletedAt" IS NULL AND "isPremium" = false
-           GROUP BY "chapterId"
-           UNION ALL
-           SELECT 'suggestion' as "type", "chapterId", COUNT(*) as "count"
-           FROM "Suggestion" WHERE "chapterId" IN (${chapterPlaceholders}) AND "isActive" = true AND "deletedAt" IS NULL
-           GROUP BY "chapterId"
-           UNION ALL
-           SELECT 'knowledge_free' as "type", "chapterId", COUNT(*) as "count"
-           FROM "KnowledgeQuestion" WHERE "chapterId" IN (${chapterPlaceholders}) AND "isActive" = true AND "deletedAt" IS NULL AND "isPremium" = false
-           GROUP BY "chapterId"
-           UNION ALL
-           SELECT 'knowledge_total' as "type", "chapterId", COUNT(*) as "count"
-           FROM "KnowledgeQuestion" WHERE "chapterId" IN (${chapterPlaceholders}) AND "isActive" = true AND "deletedAt" IS NULL
-           GROUP BY "chapterId"`,
-          ...chapterIds, ...chapterIds, ...chapterIds, ...chapterIds, ...chapterIds, ...chapterIds
+          Prisma.sql`
+            SELECT 'lecture' as "type", "chapterId", COUNT(*) as "count"
+            FROM "Lecture" WHERE "chapterId" IN (${Prisma.join(chapterIds)}) AND "isActive" = true AND "deletedAt" IS NULL AND "isPremium" = false
+            GROUP BY "chapterId"
+            UNION ALL
+            SELECT 'mcq' as "type", "chapterId", COUNT(*) as "count"
+            FROM "MCQ" WHERE "chapterId" IN (${Prisma.join(chapterIds)}) AND "isActive" = true AND "deletedAt" IS NULL AND "isPremium" = false
+            GROUP BY "chapterId"
+            UNION ALL
+            SELECT 'cq' as "type", "chapterId", COUNT(*) as "count"
+            FROM "CQ" WHERE "chapterId" IN (${Prisma.join(chapterIds)}) AND "isActive" = true AND "deletedAt" IS NULL AND "isPremium" = false
+            GROUP BY "chapterId"
+            UNION ALL
+            SELECT 'suggestion' as "type", "chapterId", COUNT(*) as "count"
+            FROM "Suggestion" WHERE "chapterId" IN (${Prisma.join(chapterIds)}) AND "isActive" = true AND "deletedAt" IS NULL
+            GROUP BY "chapterId"
+            UNION ALL
+            SELECT 'knowledge_free' as "type", "chapterId", COUNT(*) as "count"
+            FROM "KnowledgeQuestion" WHERE "chapterId" IN (${Prisma.join(chapterIds)}) AND "isActive" = true AND "deletedAt" IS NULL AND "isPremium" = false
+            GROUP BY "chapterId"
+            UNION ALL
+            SELECT 'knowledge_total' as "type", "chapterId", COUNT(*) as "count"
+            FROM "KnowledgeQuestion" WHERE "chapterId" IN (${Prisma.join(chapterIds)}) AND "isActive" = true AND "deletedAt" IS NULL
+            GROUP BY "chapterId"
+          `
         )
       : []
 

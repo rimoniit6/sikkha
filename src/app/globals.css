@@ -64,6 +64,7 @@
   --radius-lg: 0.75rem;    /* 12px */
   --radius-xl: 1rem;       /* 16px */
   --radius-2xl: 1.25rem;   /* 20px */
+  --radius-3xl: 1.75rem;   /* 28px */
   --radius-full: 9999px;
 
   /* ── Shadows ── */
@@ -198,6 +199,25 @@
   --edu-premium-light: oklch(0.95 0.06 45);
   --edu-glass: oklch(1 0 0 / 60%);
   --edu-glass-border: oklch(1 0 0 / 25%);
+
+  /* ── Surface System ── */
+  --surface: oklch(1 0 0);
+  --surface-secondary: oklch(0.99 0.002 240);
+  --surface-muted: oklch(0.96 0.005 240);
+  --surface-elevated: oklch(1 0 0);
+  --surface-glass: oklch(1 0 0 / 60%);
+
+  /* ── Z-Index Scale ── */
+  --z-header: 50;
+  --z-fab: 45;
+  --z-bottom-nav: 40;
+  --z-drawer: 60;
+  --z-modal: 70;
+  --z-dialog: 80;
+  --z-popover: 90;
+  --z-tooltip: 100;
+  --z-toast: 110;
+  --z-max: 9999;
 }
 
 .dark {
@@ -245,6 +265,13 @@
   --edu-premium-light: oklch(0.22 0.08 45);
   --edu-glass: oklch(0.2 0.015 260 / 60%);
   --edu-glass-border: oklch(1 0 0 / 10%);
+
+  /* Dark Surface System */
+  --surface: oklch(0.18 0.015 260);
+  --surface-secondary: oklch(0.15 0.01 260);
+  --surface-muted: oklch(0.2 0.01 260);
+  --surface-elevated: oklch(0.22 0.015 260);
+  --surface-glass: oklch(0.13 0.01 260 / 60%);
 }
 
 /* ───────────────────────────────────────────────────────────────
@@ -638,6 +665,82 @@ button, a, select, input[type="button"], input[type="submit"] {
 }
 
 /* ───────────────────────────────────────────────────────────────
+   BUTTON FOUNDATION UTILITIES
+   ─────────────────────────────────────────────────────────────── */
+
+/* Loading state: hides text, shows spinner */
+@keyframes btn-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+}
+.btn-loading > * {
+  visibility: hidden;
+}
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid oklch(1 0 0 / 0.6);
+  border-top-color: oklch(1 0 0 / 1);
+  border-radius: 9999px;
+  animation: btn-spin 0.6s linear infinite;
+}
+
+/* Outline variant: darker spinner */
+.btn-loading.btn-loading-outline::after {
+  border-color: oklch(0 0 0 / 0.2);
+  border-top-color: oklch(0 0 0 / 0.7);
+}
+.dark .btn-loading.btn-loading-outline::after {
+  border-color: oklch(1 0 0 / 0.2);
+  border-top-color: oklch(1 0 0 / 0.7);
+}
+
+/* Button press feedback (mobile-friendly) */
+.btn-press {
+  transition: transform 0.1s var(--ease-spring), box-shadow 0.15s var(--ease-default);
+}
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* ───────────────────────────────────────────────────────────────
+   CARD FOUNDATION UTILITIES
+   ─────────────────────────────────────────────────────────────── */
+
+/* Glass card variant — standalone glass surface with xl radius */
+.card-glass {
+  background: var(--surface-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--edu-glass-border);
+  border-radius: var(--radius-xl);
+}
+
+/* Compact card variant — reduced padding */
+.card-compact {
+  padding: var(--space-3);
+  gap: var(--space-2);
+}
+
+/* Interactive card — tap feedback for mobile */
+.card-interactive {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.15s var(--ease-spring), box-shadow 0.15s var(--ease-default);
+}
+.card-interactive:active {
+  transform: scale(0.98);
+}
+
+/* ───────────────────────────────────────────────────────────────
    BOTTOM SHEET / SHEET UTILITIES
    ─────────────────────────────────────────────────────────────── */
 
@@ -966,6 +1069,22 @@ img[data-align="center"] {
   animation: fade-in-up 0.5s ease-out forwards;
 }
 
+/* Stagger list — automatic nth-child delays for list items */
+.stagger-list > * {
+  opacity: 0;
+  animation: fade-in-up 0.4s ease-out both;
+}
+.stagger-list > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-list > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-list > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-list > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-list > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-list > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-list > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-list > *:nth-child(8) { animation-delay: 0.4s; }
+.stagger-list > *:nth-child(9) { animation-delay: 0.45s; }
+.stagger-list > *:nth-child(10) { animation-delay: 0.5s; }
+
 /* ── Stagger delay helpers ── */
 .delay-100 { animation-delay: 0.1s; }
 .delay-150 { animation-delay: 0.15s; }
@@ -1058,6 +1177,51 @@ img[data-align="center"] {
 }
 
 /* ───────────────────────────────────────────────────────────────
+   FOCUS MODE
+   ─────────────────────────────────────────────────────────────── */
+
+.focus-mode {
+  /* Max width for readability on large screens */
+  --container-max: 56rem;
+
+  /* Slight background tint for reduced eye strain */
+  --focus-bg: oklch(0.97 0.01 70);
+  --focus-foreground: oklch(0.2 0.02 40);
+}
+
+.dark .focus-mode {
+  --focus-bg: oklch(0.1 0.02 200);
+  --focus-foreground: oklch(0.92 0.005 240);
+}
+
+.focus-mode body,
+.focus-mode {
+  background-color: var(--focus-bg);
+  color: var(--focus-foreground);
+}
+
+.focus-mode .container-app {
+  max-width: var(--container-max);
+}
+
+/* Higher contrast links in focus mode */
+.focus-mode a {
+  color: oklch(0.45 0.2 160);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.dark .focus-mode a {
+  color: oklch(0.65 0.2 160);
+}
+
+/* Subtle transition when entering/exiting focus mode */
+.focus-mode {
+  transition: background-color var(--duration-normal) var(--ease-default),
+              color var(--duration-normal) var(--ease-default);
+}
+
+/* ───────────────────────────────────────────────────────────────
    PARTICLE FLOAT ANIMATION
    ─────────────────────────────────────────────────────────────── */
 
@@ -1136,6 +1300,234 @@ img[data-align="center"] {
 /* ───────────────────────────────────────────────────────────────
    INSTALL BANNER
    ─────────────────────────────────────────────────────────────── */
+
+/* ───────────────────────────────────────────────────────────────
+   LECTURE READING CONTENT — Bengali-friendly typography
+   ─────────────────────────────────────────────────────────────── */
+
+.lecture-content {
+  /* Comfortable reading width */
+  max-width: 42rem;
+  margin-inline: auto;
+
+  /* Bengali-friendly body */
+  font-size: var(--text-base);
+  line-height: var(--leading-bengali);
+  color: var(--foreground);
+
+  /* Paragraph spacing */
+  & > p {
+    margin-bottom: 1.25em;
+  }
+
+  & > p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Heading spacing */
+  & > h1, & > h2, & > h3, & > h4 {
+    margin-top: 2em;
+    margin-bottom: 0.75em;
+    line-height: var(--leading-tight);
+    font-weight: 700;
+  }
+
+  & > h1:first-child, & > h2:first-child, & > h3:first-child {
+    margin-top: 0;
+  }
+
+  /* Image blocks within content */
+  & figure,
+  & [data-slot="image"] {
+    margin: 2em auto;
+  }
+
+  /* Caption styling */
+  & figcaption {
+    text-align: center;
+    font-size: var(--text-xs);
+    color: var(--muted-foreground);
+    margin-top: 0.5em;
+    font-style: italic;
+  }
+
+  /* List spacing */
+  & ul, & ol {
+    margin: 1em 0;
+    padding-left: 1.5em;
+  }
+
+  & li {
+    margin-bottom: 0.5em;
+    line-height: var(--leading-relaxed);
+  }
+
+  /* Blockquote */
+  & blockquote {
+    border-left: 3px solid oklch(0.55 0.2 160 / 40%);
+    padding-left: 1em;
+    margin: 1.5em 0;
+    color: var(--muted-foreground);
+    font-style: italic;
+  }
+
+  /* Code blocks */
+  & pre {
+    margin: 1.5em 0;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+  }
+
+  & code {
+    font-size: 0.9em;
+    font-family: var(--font-mono);
+  }
+
+  /* Tables */
+  & table {
+    width: 100%;
+    margin: 1.5em 0;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+  }
+
+  & th, & td {
+    border: 1px solid var(--border);
+    padding: 0.5em 0.75em;
+    text-align: left;
+  }
+
+  & th {
+    background: var(--muted);
+    font-weight: 600;
+  }
+
+  /* Horizontal rule */
+  & hr {
+    margin: 2em 0;
+    border-color: var(--border);
+    opacity: 0.4;
+  }
+
+  /* Links */
+  & a {
+    color: oklch(0.55 0.2 160);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  & a:hover {
+    opacity: 0.8;
+  }
+}
+
+/* Reduced motion for smooth scroll inside TOC */
+@media (prefers-reduced-motion: reduce) {
+  .lecture-content {
+    scroll-behavior: auto;
+  }
+}
+
+/* ── Sepia Theme ── */
+.reading-theme-sepia {
+  --background: oklch(0.92 0.03 70);
+  --foreground: oklch(0.3 0.04 40);
+  --card: oklch(0.94 0.025 65);
+  --card-foreground: oklch(0.3 0.04 40);
+  --muted: oklch(0.88 0.02 70);
+  --muted-foreground: oklch(0.5 0.03 45);
+  --border: oklch(0.82 0.025 65);
+  --popover: oklch(0.94 0.025 65);
+  --popover-foreground: oklch(0.3 0.04 40);
+  --input: oklch(0.85 0.02 65);
+  --secondary: oklch(0.88 0.02 70);
+  --secondary-foreground: oklch(0.35 0.03 40);
+  --accent: oklch(0.86 0.03 65);
+  --accent-foreground: oklch(0.3 0.04 40);
+  --ring: oklch(0.6 0.15 70);
+  --edu-primary: oklch(0.55 0.15 70);
+  --edu-primary-light: oklch(0.88 0.06 70);
+  --edu-primary-dark: oklch(0.4 0.12 70);
+  --surface: oklch(0.94 0.025 65);
+  --surface-glass: oklch(0.94 0.025 65 / 60%);
+  --edu-glass: oklch(0.94 0.025 65 / 60%);
+  --edu-glass-border: oklch(0.8 0.02 65 / 40%);
+}
+
+/* ── Dark reader theme ── */
+.reading-theme-dark {
+  --background: oklch(0.1 0.005 260);
+  --foreground: oklch(0.9 0.005 240);
+  --card: oklch(0.14 0.008 260);
+  --card-foreground: oklch(0.9 0.005 240);
+  --muted: oklch(0.16 0.008 260);
+  --muted-foreground: oklch(0.6 0.01 240);
+  --border: oklch(0.22 0.01 260);
+  --popover: oklch(0.14 0.008 260);
+  --popover-foreground: oklch(0.9 0.005 240);
+  --input: oklch(0.2 0.008 260);
+  --secondary: oklch(0.18 0.008 260);
+  --secondary-foreground: oklch(0.85 0.005 240);
+  --accent: oklch(0.18 0.01 160);
+  --accent-foreground: oklch(0.85 0.02 160);
+  --ring: oklch(0.55 0.15 160);
+  --edu-primary: oklch(0.55 0.15 160);
+  --edu-primary-light: oklch(0.18 0.05 160);
+  --surface: oklch(0.14 0.008 260);
+  --surface-glass: oklch(0.1 0.005 260 / 60%);
+  --edu-glass: oklch(0.14 0.008 260 / 60%);
+  --edu-glass-border: oklch(1 0 0 / 8%);
+}
+
+/* Reading width variants applied to lecture-content */
+.lecture-content.max-w-prose {
+  max-width: 42rem;
+}
+.lecture-content.max-w-4xl {
+  max-width: 56rem;
+}
+
+/* Lecture content block spacing polish */
+.lecture-content > div:has(img),
+.lecture-content figure {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+.lecture-content video,
+.lecture-content iframe {
+  border-radius: var(--radius-lg);
+  margin: 1.5em 0;
+}
+
+.lecture-content pre {
+  margin: 1.5em 0;
+  border-radius: var(--radius-lg);
+}
+
+.lecture-content table {
+  margin: 1.5em 0;
+}
+
+.lecture-content .katex-display {
+  margin: 1.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+}
+
+/* ── Dark mode overrides for lecture content ── */
+.dark .lecture-content {
+  & blockquote {
+    border-left-color: oklch(0.6 0.2 160 / 50%);
+    opacity: 0.85;
+  }
+
+  & a {
+    color: oklch(0.65 0.2 160);
+  }
+}
 
 .install-banner {
   position: fixed;

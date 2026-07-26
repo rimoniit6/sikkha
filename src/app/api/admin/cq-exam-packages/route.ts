@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server'
 import { toDecimal } from '@/lib/decimal'
 import { guardDeleteDependencies } from '@/lib/delete-guard'
 import { softDelete } from '@/lib/soft-delete'
+import { Prisma } from '@prisma/client'
 
 async function checkGradingDeadline(setId: string): Promise<void> {
   const examSet = await db.cQExamSet.findUnique({
@@ -21,7 +22,7 @@ async function checkGradingDeadline(setId: string): Promise<void> {
 
 // When called inside $transaction, pass the tx client so queries run on the
 // same connection and see uncommitted writes from the transaction.
-async function recalculateSetTotals(setId: string, client: typeof db = db) {
+async function recalculateSetTotals(setId: string, client: any = db) {
   const result = await client.cQExamSetQuestion.aggregate({
     where: { setId },
     _count: { id: true },
@@ -36,7 +37,7 @@ async function recalculateSetTotals(setId: string, client: typeof db = db) {
   return { totalQuestions, totalMarks }
 }
 
-async function recalculatePackageTotalSets(packageId: string, client: typeof db = db) {
+async function recalculatePackageTotalSets(packageId: string, client: any = db) {
   const count = await client.cQExamSet.count({
     where: { packageId },
   })
@@ -67,8 +68,8 @@ export async function GET(request: Request) {
         const where: Record<string, unknown> = {}
         if (search) {
           where.OR = [
-            { title: { contains: search } },
-            { description: { contains: search } },
+            { title: { contains: search, mode: 'insensitive' } },
+            { description: { contains: search, mode: 'insensitive' } },
           ]
         }
         if (classId) where.classId = classId
@@ -156,7 +157,7 @@ export async function GET(request: Request) {
         if (classLevel) where.classLevel = classLevel
         if (subjectId) where.subjectId = subjectId
         if (chapterId) where.chapterId = chapterId
-        if (q) where.uddeepok = { contains: q }
+        if (q) where.uddeepok = { contains: q, mode: 'insensitive' }
 
         const [cqs, total] = await Promise.all([
           db.cQ.findMany({

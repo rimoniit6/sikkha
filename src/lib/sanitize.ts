@@ -64,7 +64,7 @@ const ALLOWED_TAGS: string[] = [
 
 const ALLOWED_ATTR: string[] = [
   // ── Global ──
-  'class', 'style', 'id', 'title', 'lang', 'dir',
+  'class', 'id', 'title', 'lang', 'dir',
   'role', 'aria-hidden', 'aria-label', 'aria-describedby',
 
   // ── Links ──

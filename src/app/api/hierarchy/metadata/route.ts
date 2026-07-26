@@ -18,7 +18,7 @@ export async function GET() {
   try {
     // Validate database connection
     if (!db) {
-    return handleApiError(error, '[/api/hierarchy/metadata] Database client is not available')
+      return handleApiError(new Error('Database client is not available'), '[/api/hierarchy/metadata] Database client is not available')
     }
 
     // Fetch all data in parallel

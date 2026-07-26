@@ -93,7 +93,7 @@ describe('validateExamAccess', () => {
 
   it('returns hasAccess=false when no MCQ purchase and no course access', async () => {
     vi.mocked(db.mCQExamPackagePurchase.findUnique).mockResolvedValue(null)
-    vi.mocked(resolveCourseLayerAccess).mockResolvedValue({ hasAccess: false, reason: 'no access' })
+    vi.mocked(resolveCourseLayerAccess).mockResolvedValue({ hasAccess: false, source: null })
 
     const result = await validateExamAccess('u1', 'pkg1', 'mcq')
 
@@ -104,7 +104,7 @@ describe('validateExamAccess', () => {
 
   it('returns hasAccess=false when no CQ purchase and no course access', async () => {
     vi.mocked(db.cQExamPackagePurchase.findUnique).mockResolvedValue(null)
-    vi.mocked(resolveCourseLayerAccess).mockResolvedValue({ hasAccess: false })
+    vi.mocked(resolveCourseLayerAccess).mockResolvedValue({ hasAccess: false, source: null })
 
     const result = await validateExamAccess('u1', 'pkg1', 'cq')
 

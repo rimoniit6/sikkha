@@ -235,17 +235,21 @@ const CodeBlockEditor = memo(function CodeBlockEditor({ block, onChange }: { blo
 
 function BlockPreview({ block }: { block: ContentBlock }) {
   switch (block.type) {
-    case 'heading':
+    case 'heading': {
+      const headingId = `heading-${block.id}`
       return (
-        <RichContentRenderer
-          content={block.content || '(হেডিং)'}
-          className={cn(
-            block.level === 1 && 'text-xl font-bold',
-            block.level === 2 && 'text-lg font-semibold',
-            block.level === 3 && 'text-base font-medium',
-          )}
-        />
+        <div id={headingId}>
+          <RichContentRenderer
+            content={block.content || '(হেডিং)'}
+            className={cn(
+              block.level === 1 && 'text-xl font-bold',
+              block.level === 2 && 'text-lg font-semibold',
+              block.level === 3 && 'text-base font-medium',
+            )}
+          />
+        </div>
       )
+    }
     case 'text':
       return block.content ? (
         <RichContentRenderer content={block.content} className="text-sm leading-relaxed" />

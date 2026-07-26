@@ -69,8 +69,8 @@ export async function GET(request: Request) {
     if (featured === 'true') where.isFeatured = true
     if (search) {
       where.OR = [
-        { title: { contains: search } },
-        { excerpt: { contains: search } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { excerpt: { contains: search, mode: 'insensitive' } },
       ]
     }
 

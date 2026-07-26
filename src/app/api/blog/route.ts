@@ -6,7 +6,7 @@ import { handleApiError } from '@/lib/errors'
 export async function GET(request: Request) {
   try {
     const rateCheck = await applyRateLimit(apiLimiter, request)
-    if (rateCheck) return rateCheck
+    if ('error' in rateCheck) return rateCheck.error
 
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
@@ -39,8 +39,8 @@ export async function GET(request: Request) {
     }
     if (search) {
       where.OR = [
-        { title: { contains: search } },
-        { excerpt: { contains: search } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { excerpt: { contains: search, mode: 'insensitive' } },
       ]
     }
 

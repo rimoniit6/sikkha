@@ -131,7 +131,7 @@ export async function GET(request: Request) {
     const buildWhere = (searchFields: string[]) => {
       const where: Record<string, unknown> = { board: { not: null } }
       if (q) {
-        where.OR = searchFields.map((field) => ({ [field]: { contains: q } }))
+        where.OR = searchFields.map((field) => ({ [field]: { contains: q, mode: 'insensitive' } }))
       }
       if (board) where.board = board
       if (year) where.year = year

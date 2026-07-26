@@ -108,6 +108,8 @@ describe('createInAppNotification', () => {
         title: 'Test Title',
         message: 'Test Message',
         type: 'INFO',
+        priority: 'medium',
+        category: null,
         link: null,
       },
     })
@@ -129,6 +131,8 @@ describe('createInAppNotification', () => {
         title: 'Test',
         message: 'Test',
         type: 'SUCCESS',
+        priority: 'medium',
+        category: null,
         link: '/admin/workflow/lecture/lec-1',
       },
     })
@@ -262,6 +266,9 @@ describe('dispatchWorkflowNotifications', () => {
     expect(result.inApp.id).toBeDefined()
     expect(result.email.skipped).toBe(true) // No provider
     expect(db.notification.create).toHaveBeenCalledTimes(1)
+    // Verify priority defaults to medium for workflow notifications
+    const createCall = db.notification.create.mock.calls[0][0]
+    expect(createCall.data.priority).toBe('medium')
   })
 
   it('skips in-app notification when no userId', async () => {
@@ -352,6 +359,7 @@ describe('dispatchWorkflowNotifications', () => {
       userId: 'user-1',
     })
     expect(db.notification.create.mock.calls[0][0].data.type).toBe('SUCCESS')
+    expect(db.notification.create.mock.calls[0][0].data.priority).toBe('medium')
 
     // REJECTED → WARNING
     db.notification.create.mockClear()

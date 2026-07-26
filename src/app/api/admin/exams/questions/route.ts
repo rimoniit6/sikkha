@@ -25,8 +25,8 @@ export async function GET(request: Request) {
       if (classLevel) mcqWhere.classLevel = classLevel
       if (subjectId && subjectId !== 'all') mcqWhere.subjectId = subjectId
       if (search) mcqWhere.OR = [
-        { question: { contains: search } },
-        { topic: { contains: search } },
+        { question: { contains: search, mode: 'insensitive' } },
+        { topic: { contains: search, mode: 'insensitive' } },
       ]
 
       result.mcqs = await db.mCQ.findMany({
@@ -52,8 +52,8 @@ export async function GET(request: Request) {
       if (classLevel) cqWhere.classLevel = classLevel
       if (subjectId && subjectId !== 'all') cqWhere.subjectId = subjectId
       if (search) cqWhere.OR = [
-        { uddeepok: { contains: search } },
-        { topic: { contains: search } },
+        { uddeepok: { contains: search, mode: 'insensitive' } },
+        { topic: { contains: search, mode: 'insensitive' } },
       ]
 
       result.cqs = await db.cQ.findMany({

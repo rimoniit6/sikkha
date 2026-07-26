@@ -42,6 +42,8 @@ export interface InAppNotification {
   message: string
   type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR'
   link?: string
+  priority?: 'critical' | 'high' | 'medium' | 'low'
+  category?: string
 }
 
 /**
@@ -59,6 +61,8 @@ export async function createInAppNotification(
       title: notification.title,
       message: notification.message,
       type: notification.type,
+      priority: notification.priority || 'medium',
+      category: notification.category || null,
       link: notification.link || null,
     },
   })
@@ -85,6 +89,8 @@ export async function createBroadcastNotification(
       title: notification.title,
       message: notification.message,
       type: notification.type,
+      priority: notification.priority || 'medium',
+      category: notification.category || null,
       link: notification.link || null,
     })),
   })

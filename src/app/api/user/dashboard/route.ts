@@ -30,11 +30,12 @@ export async function GET(request: Request) {
       examResults,
       savedQuestions,
     ] = await Promise.all([
-      db.user.findUnique({ where: { id: userId } }),
+      db.user.findUnique({ where: { id: userId }, select: { isPremium: true, premiumExpiry: true } }),
       db.progress.findMany({
         where: { userId },
         orderBy: { lastAccessed: 'desc' },
         take: 10,
+        select: { contentType: true, progress: true },
       }),
       db.lecture.count({ where: lectureCountWhere }),
       db.examResult.findMany({

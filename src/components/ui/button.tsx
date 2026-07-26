@@ -40,17 +40,27 @@ function Button({
   variant,
   size,
   asChild = false,
+  loading = false,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    /** Shows loading spinner and disables interaction. Reuses .btn-loading from globals.css. */
+    loading?: boolean
   }) {
   const Comp = asChild ? Slot : "button"
 
   return (
     <Comp
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(
+        buttonVariants({ variant, size }),
+        loading && "btn-loading",
+        variant === "outline" && loading && "btn-loading-outline",
+        className
+      )}
+      disabled={props.disabled || loading}
+      aria-busy={loading || undefined}
       {...props}
     />
   )

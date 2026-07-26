@@ -4,6 +4,7 @@ import Link from 'next/link'
 import BlogCard from '@/features/blog/components/BlogCard'
 import { serialize } from '@/lib/serialize'
 import type { Metadata } from 'next'
+import type { BlogPostRecord } from '@/features/blog/types/blog'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -29,6 +30,7 @@ export default async function BlogCategoryPage({ params }: Props) {
     include: {
       author: { select: { id: true, name: true, avatar: true } },
       category: { select: { id: true, name: true, slug: true, color: true } },
+      tags: { include: { tag: { select: { id: true, name: true, slug: true } } } },
     },
     orderBy: { publishedAt: 'desc' },
   })
@@ -47,7 +49,7 @@ export default async function BlogCategoryPage({ params }: Props) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post) => (
-              <BlogCard key={post.id} post={serialize(post)} />
+              <BlogCard key={post.id} post={serialize(post) as unknown as BlogPostRecord} />
             ))}
           </div>
         )}

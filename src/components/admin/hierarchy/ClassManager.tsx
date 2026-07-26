@@ -98,7 +98,7 @@ export function ClassManager({
     }
     setSaving(true)
     try {
-      const slug = classForm.slug || generateSlug(classForm.name)
+      const slug = classForm.slug || slugify(classForm.name)
       const body = {
         ...(editingClass ? { id: editingClass.id } : {}),
         name: classForm.name,

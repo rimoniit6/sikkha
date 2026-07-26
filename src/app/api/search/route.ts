@@ -48,7 +48,7 @@ export async function GET(request: Request) {
       queryPromises.push({
         key: 'mcqs',
         promise: db.mCQ.findMany({
-          where: { isActive: true, question: { contains: searchQuery }, ...classFilter },
+          where: { isActive: true, question: { contains: searchQuery, mode: 'insensitive' }, ...classFilter },
           include: chapterInclude,
           skip,
           take: limit,
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
       queryPromises.push({
         key: 'cqs',
         promise: db.cQ.findMany({
-          where: { isActive: true, uddeepok: { contains: searchQuery }, ...classFilter },
+          where: { isActive: true, uddeepok: { contains: searchQuery, mode: 'insensitive' }, ...classFilter },
           include: chapterInclude,
           skip,
           take: limit,
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
       queryPromises.push({
         key: 'lectures',
         promise: db.lecture.findMany({
-          where: { isActive: true, title: { contains: searchQuery }, ...relationalClassFilter },
+          where: { isActive: true, title: { contains: searchQuery, mode: 'insensitive' }, ...relationalClassFilter },
           include: chapterInclude,
           skip,
           take: limit,
@@ -87,7 +87,7 @@ export async function GET(request: Request) {
       queryPromises.push({
         key: 'suggestions',
         promise: db.suggestion.findMany({
-          where: { isActive: true, title: { contains: searchQuery }, ...(classLevel ? { classId: classLevel } : {}) },
+          where: { isActive: true, title: { contains: searchQuery, mode: 'insensitive' }, ...(classLevel ? { classId: classLevel } : {}) },
           skip,
           take: limit,
           orderBy: { createdAt: 'desc' },
@@ -99,7 +99,7 @@ export async function GET(request: Request) {
       queryPromises.push({
         key: 'notices',
         promise: db.notice.findMany({
-          where: { isActive: true, title: { contains: searchQuery } },
+          where: { isActive: true, title: { contains: searchQuery, mode: 'insensitive' } },
           skip,
           take: limit,
           orderBy: { createdAt: 'desc' },
@@ -111,7 +111,7 @@ export async function GET(request: Request) {
       queryPromises.push({
         key: 'bundles',
         promise: db.contentBundle.findMany({
-          where: { isActive: true, title: { contains: searchQuery } },
+          where: { isActive: true, title: { contains: searchQuery, mode: 'insensitive' } },
           skip,
           take: limit,
           orderBy: { createdAt: 'desc' },

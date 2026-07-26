@@ -11,7 +11,7 @@
 
 import { db } from '@/lib/db'
 import { createAuditLog } from '@/lib/audit'
-import { SOFT_DELETE_MODELS, bulkForceDelete, getPrismaModel } from '@/lib/soft-delete'
+import { SOFT_DELETE_MODELS, bulkForceDelete, getPrismaModel, MODEL_LABELS } from '@/lib/soft-delete'
 
 // ─── Settings Keys ───
 
@@ -354,38 +354,3 @@ export async function runTrashCleanup(
   }
 }
 
-// ─── Model Labels ───
-
-const MODEL_LABELS: Record<string, string> = {
-  classCategory: 'শ্রেণি',
-  subject: 'বিষয়',
-  chapter: 'অধ্যায়',
-  topic: 'টপিক',
-  knowledgeQuestion: 'সংক্ষিপ্ত প্রশ্ন',
-  lecture: 'লেকচার',
-  resource: 'রিসোর্স',
-  mcq: 'MCQ',
-  cq: 'CQ',
-  suggestion: 'সাজেশন',
-  course: 'কোর্স',
-  courseLesson: 'কোর্স লেসন',
-  banner: 'ব্যানার',
-  faq: 'FAQ',
-  testimonial: 'টেস্টিমোনিয়াল',
-  notice: 'নোটিশ',
-  navigation: 'নেভিগেশন',
-  contentType: 'কন্টেন্ট টাইপ',
-  featuredContent: 'ফিচার্ড কন্টেন্ট',
-  contentBundle: 'বান্ডেল',
-  contentPackage: 'প্যাকেজ',
-  mcqExamPackage: 'MCQ এক্সাম প্যাকেজ',
-  cqExamPackage: 'CQ এক্সাম প্যাকেজ',
-  teacherModerator: 'শিক্ষক',
-  board: 'বোর্ড',
-  examYear: 'পরীক্ষার সাল',
-  boardYear: 'বোর্ড সাল',
-  exam: 'এক্সাম',
-  userSubscription: 'সাবস্ক্রিপশন',
-  mcqExamPackagePurchase: 'MCQ ক্রয়',
-  cqExamPackagePurchase: 'CQ ক্রয়',
-}

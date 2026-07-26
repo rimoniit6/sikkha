@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         where.class = { slug: classSlug }
       }
       if (search) {
-        where.title = { contains: search }
+        where.title = { contains: search, mode: 'insensitive' }
       }
 
       const [packages, total] = await Promise.all([

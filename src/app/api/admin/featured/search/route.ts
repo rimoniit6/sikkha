@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     // Build the Prisma where clause from search fields
     const where: Record<string, unknown> = {}
     if (query) {
-      where.OR = reg.searchFields.map((field) => ({ [field]: { contains: query } }))
+      where.OR = reg.searchFields.map((field) => ({ [field]: { contains: query, mode: 'insensitive' } }))
     }
 
     const model = (db as Record<string, unknown>)[reg.modelKey] as

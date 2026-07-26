@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     const where: Record<string, unknown> = {}
     if (contentType) where.contentType = contentType
     if (userId) where.userId = userId
-    if (search) where.content = { contains: search }
+    if (search) where.content = { contains: search, mode: 'insensitive' }
 
     const [data, total] = await Promise.all([
       db.note.findMany({

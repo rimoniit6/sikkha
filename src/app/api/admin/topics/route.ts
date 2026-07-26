@@ -31,8 +31,8 @@ export async function GET(request: Request) {
     if (isActive !== null && isActive !== undefined) where.isActive = isActive === 'true'
     if (q) {
       where.OR = [
-        { name: { contains: q } },
-        { slug: { contains: q } },
+        { name: { contains: q, mode: 'insensitive' } },
+        { slug: { contains: q, mode: 'insensitive' } },
       ]
     }
 

@@ -6,7 +6,7 @@ import { handleApiError } from '@/lib/errors'
 export async function GET(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   try {
     const rateCheck = await applyRateLimit(apiLimiter, request)
-    if (rateCheck) return rateCheck
+    if ('error' in rateCheck) return rateCheck.error
 
     const { slug } = await params
 

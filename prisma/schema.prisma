@@ -1,9 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // ============ ENUMS ============
@@ -78,6 +79,9 @@ model User {
   createdExams            Exam[]
   examSessions            ExamSession[]
   blogPosts               BlogPost[]
+  achievements            UserAchievement[]
+  lessonProgress          LessonProgress[]
+  revisionQueue           RevisionQueue[]
 
   @@index([role])
   @@index([classLevel, board])
@@ -431,6 +435,7 @@ model ExamResult {
   @@index([userId])
   @@index([examId])
   @@index([userId, examId])
+  @@index([userId, completedAt])
 }
 
 model ExamSession {
@@ -470,6 +475,8 @@ model Progress {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, contentId, contentType])
+  @@index([userId, contentType, lastAccessed])
+  @@index([userId, lastAccessed])
 }
 
 model Bookmark {
@@ -482,6 +489,7 @@ model Bookmark {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, contentId, contentType])
+  @@index([userId, createdAt])
 }
 
 model Note {
@@ -540,6 +548,7 @@ model RecentlyViewed {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, viewedAt])
+  @@index([userId, contentType, viewedAt])
 }
 
 // ============ PAYMENT SYSTEM ============
@@ -576,6 +585,7 @@ model Payment {
   @@index([status, createdAt])
   @@index([contentType, contentId, status])
   @@index([reviewedBy])
+  @@index([userId, createdAt])
 }
 
 // ============ NOTIFICATION ============
@@ -586,6 +596,8 @@ model Notification {
   title     String
   message   String
   type      String   @default("INFO") // info, success, warning, error
+  priority  String   @default("medium") // critical, high, medium, low
+  category  String?  // deduplication category: revision-overdue, weak-subject, etc.
   isRead    Boolean  @default(false)
   link      String?
   createdAt DateTime @default(now())
@@ -593,6 +605,7 @@ model Notification {
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead, createdAt])
+  @@index([userId, category, createdAt])
   @@index([isRead, createdAt])
 }
 
@@ -721,6 +734,8 @@ model Testimonial {
   deleteReason String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  @@index([isActive, order])
 }
 
 // ============ NOTICE SYSTEM ============
@@ -887,6 +902,8 @@ model ContactMessage {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([isRead, createdAt])
 }
 
 // ============ NAVIGATION SYSTEM ============
@@ -906,6 +923,8 @@ model Navigation {
   deleteReason String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  @@index([location, isActive])
 }
 
 // ============ BUNDLE SYSTEM ============
@@ -931,6 +950,8 @@ model ContentBundle {
   updatedAt     DateTime  @updatedAt
 
   items BundleItem[]
+
+  @@index([isActive, deletedAt])
 }
 
 model BundleItem {
@@ -970,6 +991,8 @@ model ContentPackage {
   updatedAt     DateTime  @updatedAt
 
   subscriptions UserSubscription[]
+
+  @@index([isActive, deletedAt])
 }
 
 // User's active subscription — created when payment for a package is approved
@@ -1105,6 +1128,7 @@ model MCQExamSetResult {
   @@index([userId, setId])
   @@index([setId, status])
   @@index([attemptNumber])
+  @@index([userId, submittedAt])
 }
 
 // ============ MCQ EXAM RETAKE REQUESTS ============
@@ -1316,6 +1340,7 @@ model CQExamSubmission {
   @@index([userId, status])
   @@index([status])
   @@index([practiceMode])
+  @@index([userId, submittedAt])
 }
 
 model CQExamAnswer {
@@ -1468,6 +1493,9 @@ model Course {
   // Certificates
   certificates Certificate[]
 
+  // Lesson Progress
+  lessonProgress LessonProgress[]
+
   deletedAt    DateTime?
   deletedBy    String?
   deleteReason String?
@@ -1509,11 +1537,12 @@ model CourseLesson {
   updatedAt    DateTime  @updatedAt
 
   // Relations
-  exams       LessonExam[]
-  assignments LessonAssignment[]
-  schedules   LessonSchedule[]
-  notes       LessonNote[]
-  resources   LessonResource[]
+  exams          LessonExam[]
+  assignments    LessonAssignment[]
+  schedules      LessonSchedule[]
+  notes          LessonNote[]
+  resources      LessonResource[]
+  lessonProgress LessonProgress[]
 
   @@index([courseId, displayOrder])
 }
@@ -1627,6 +1656,54 @@ model AssignmentSubmission {
   @@index([userId])
 }
 
+// ============ REVISION SYSTEM (Spaced Repetition) ============
+
+model RevisionQueue {
+  id              String    @id @default(cuid())
+  userId          String
+  /** Type of content to review: lecture, mcq-chapter, cq-chapter, exam */
+  contentType     String
+  /** ID of the content (lectureId, chapterId, examId, etc.) */
+  contentId       String
+  /** Subject for display and routing */
+  subjectId       String
+  /** Optional chapter */
+  chapterId       String?
+  /** Optional topic-level identifier */
+  topicId         String?
+  /** Title for display */
+  title           String
+  /** Subtitle for display (e.g. chapter name) */
+  subtitle        String?
+  /** Current SM-2 interval in days */
+  intervalDays    Int       @default(1)
+  /** SM-2 ease factor (default 2.5, min 1.3) */
+  easeFactor      Float     @default(2.5)
+  /** Number of successful reviews */
+  reviewCount     Int       @default(0)
+  /** Confidence score (0-100) from weakness detection */
+  confidenceScore Int       @default(50)
+  /** When this item is next due for review */
+  nextReviewAt    DateTime
+  /** When this item was last reviewed */
+  lastReviewedAt  DateTime?
+  /** Whether review is completed for current cycle */
+  isCompleted     Boolean   @default(false)
+  /** Route to navigate to for review */
+  route           String
+  /** Route params */
+  routeParams     String?   // JSON string
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contentType, contentId])
+  @@index([userId, nextReviewAt])
+  @@index([userId, isCompleted])
+  @@index([userId, contentType])
+}
+
 // ============ LESSON SCHEDULE ============
 
 model LessonSchedule {
@@ -1655,6 +1732,10 @@ model LessonProgress {
   completedAt  DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson   CourseLesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  course   Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
   @@index([userId, courseId])
@@ -1990,6 +2071,33 @@ model BlogPostTag {
 
   @@id([postId, tagId])
   @@index([tagId])
+}
+
+// ============ ACHIEVEMENT SYSTEM ============
+
+model UserAchievement {
+  id            String    @id @default(cuid())
+  userId        String
+  /** Achievement identifier (e.g. "first-lecture", "streak-7") */
+  achievementId String
+  /** Current progress toward the achievement (0-100) */
+  progress      Float     @default(0)
+  /** Whether the achievement is unlocked */
+  unlocked      Boolean   @default(false)
+  /** When the achievement was unlocked */
+  unlockedAt    DateTime?
+  /** When the user claimed the reward */
+  claimedAt     DateTime?
+  /** Optional JSON metadata */
+  metadata      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId, unlocked])
+  @@index([achievementId])
 }
 
 model BlogRelatedPost {

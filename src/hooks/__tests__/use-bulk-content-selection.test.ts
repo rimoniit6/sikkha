@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-globalThis.IS_REACT_ACT_ENVIRONMENT = true
+;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
 /**
  * Unit tests for useBulkContentSelection hook.
  *
@@ -34,7 +34,7 @@ interface RenderHookResult<T> {
 function renderHook<T>(hookFn: () => T): RenderHookResult<T> {
   const result: { current: T | null } = { current: null }
   const container = document.createElement('div')
-  let root: Container | null = null
+  let root: ReturnType<typeof createRoot> | null = null
 
   function TestComponent() {
     result.current = hookFn()

@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     if (subjectId) where.subjectId = subjectId
     if (chapterId) where.chapterIds = { contains: chapterId }
     if (type) where.type = type
-    if (q?.trim()) where.title = { contains: q.trim() }
+    if (q?.trim()) where.title = { contains: q.trim(), mode: 'insensitive' }
 
     const [data, total] = await Promise.all([
       db.exam.findMany({

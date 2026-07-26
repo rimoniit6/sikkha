@@ -17,7 +17,14 @@ export async function GET(request: Request) {
 
     const subscriptions = await db.userSubscription.findMany({
       where: { userId },
-      include: {
+      select: {
+        id: true,
+        packageId: true,
+        classLevel: true,
+        startDate: true,
+        endDate: true,
+        isActive: true,
+        paymentId: true,
         package: {
           select: { id: true, title: true, durationLabel: true, thumbnail: true },
         },

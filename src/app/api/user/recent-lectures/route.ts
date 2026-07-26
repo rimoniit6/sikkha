@@ -19,6 +19,8 @@ export async function GET(request: Request) {
     const rawItems = await db.recentlyViewed.findMany({
       where: { userId, contentType: 'lecture' },
       orderBy: { viewedAt: 'desc' },
+      take: 50,
+      select: { contentId: true, title: true, viewedAt: true },
     })
 
     const seen = new Set<string>()

@@ -23,7 +23,6 @@ import {
   Send,
   SkipForward,
 } from 'lucide-react'
-import { Progress } from '@/components/ui/progress'
 import RichContentRenderer from '@/components/ui/rich-content-renderer'
 import SafeImage from '@/components/ui/safe-image'
 import { Separator } from '@/components/ui/separator'
@@ -77,6 +76,56 @@ interface QuestionPaletteProps {
   currentIndex: number
   setCurrentIndex: (i: number) => void
   setVisitedQuestions: (fn: (prev: Set<string>) => Set<string>) => void
+}
+
+function ExamQuestionSkeleton() {
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-6">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex-1">
+          <div className="bg-card rounded-xl border border-border/50 p-5 sm:p-6">
+            {/* Question header skeleton */}
+            <div className="flex items-center gap-3 mb-5">
+              <div className="h-6 w-20 bg-muted rounded-md" />
+            </div>
+            {/* Question text skeleton */}
+            <div className="space-y-3 mb-6">
+              <div className="h-4 bg-muted rounded w-full" />
+              <div className="h-4 bg-muted rounded w-3/4" />
+              <div className="h-4 bg-muted rounded w-1/2" />
+            </div>
+            {/* Options skeleton */}
+            <div className="space-y-3">
+              {[0,1,2,3].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-4 rounded-xl border border-border/50">
+                  <div className="size-8 rounded-full bg-muted shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 bg-muted rounded w-2/3" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Bottom nav skeleton */}
+          <div className="flex items-center justify-between mt-4">
+            <div className="h-9 w-24 bg-muted rounded-lg" />
+            <div className="h-9 w-24 bg-muted rounded-lg" />
+          </div>
+        </div>
+        {/* Desktop palette skeleton */}
+        <div className="hidden lg:block w-64">
+          <div className="bg-card rounded-xl border border-border/50 p-4 sticky top-[5rem]">
+            <div className="h-4 w-24 bg-muted rounded mb-4" />
+            <div className="grid grid-cols-5 gap-2">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <div key={i} className="size-10 rounded-lg bg-muted" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function QuestionPalette({
@@ -503,11 +552,8 @@ export default function ExamSessionPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="max-w-3xl mx-auto">
-          <Skeleton className="h-12 mb-4" />
-          <Skeleton className="h-64 rounded-xl" />
-        </div>
+      <div className="min-h-screen bg-background">
+        <ExamQuestionSkeleton />
       </div>
     )
   }
@@ -538,70 +584,100 @@ export default function ExamSessionPage() {
 
   const getOptionStyle = (optionKey: string) => {
     const isSelected = selectedAnswer === optionKey
-    if (isSelected) return 'border-primary bg-primary/10 text-primary'
-    return 'border-border hover:border-primary/50 hover:bg-muted/50'
+    if (isSelected) return 'border-primary bg-primary/10 text-primary ring-1 ring-primary/20'
+    return 'border-border hover:border-primary/50 hover:bg-muted/50 active:scale-[0.98] transition-all duration-150'
   }
 
   return (
     <div>
-      {/* Header */}
-      <div className="sticky top-16 z-40 bg-background border-b">
+      {/* Premium Sticky Header */}
+      <div className="sticky top-16 z-40 bg-background/95 backdrop-blur-sm border-b">
         <div className="flex items-center justify-between px-4 py-2.5 max-w-4xl mx-auto">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={handleGoBack}>
-              <ArrowLeft className="size-5" />
+          <div className="flex items-center gap-3 min-w-0">
+            <Button variant="ghost" size="icon" onClick={handleGoBack} className="size-9 shrink-0">
+              <ArrowLeft className="size-4" />
             </Button>
-            <div>
-              <p className="font-medium text-sm">{examTitle}</p>
+            <div className="min-w-0">
+              <p className="font-medium text-sm truncate">{examTitle}</p>
               <div className="flex items-center gap-2">
-                <p className="text-xs text-muted-foreground">
-                  {answeredCount}/{questions.length} উত্তর দেওয়া হয়েছে
-                </p>
-                <BatchIndicator totalBatches={totalBatches} currentBatch={currentBatch} currentBatchRange={currentBatchRange} />
+                <span className="text-xs text-muted-foreground font-mono">
+                  <span className="text-foreground font-semibold">{toBengaliNumerals(answeredCount)}</span>
+                  {'/'}{toBengaliNumerals(questions.length)}
+                </span>
+                <span className="text-[10px] text-muted-foreground/60">|</span>
+                <span className="text-xs text-muted-foreground">
+                  {toBengaliNumerals(questions.length - answeredCount)} বাকি
+                </span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <Badge variant={timeRemaining < 300 ? 'destructive' : 'secondary'} className="gap-1.5 tabular-nums">
-              <Clock className="size-3.5" />
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge variant={timeRemaining < 60 ? 'destructive' : 'secondary'} className={`gap-1.5 tabular-nums h-7 ${timeRemaining < 300 && timeRemaining >= 60 ? 'text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700' : ''}`}>
+              <Clock className="size-3" />
               {formatTime(timeRemaining)}
             </Badge>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-9 lg:hidden"
+              onClick={() => setShowPalette(!showPalette)}
+            >
+              <BookOpen className="size-4" />
+            </Button>
           </div>
         </div>
-        <Progress value={progressPercent} className="h-1 rounded-none" />
+        <div className="relative h-1 bg-muted/30">
+          <div
+            className="absolute inset-y-0 left-0 transition-all duration-500 ease-out rounded-r-full"
+            style={{
+              width: `${progressPercent}%`,
+              background: 'linear-gradient(90deg, #10b981, #06b6d4, #3b82f6)',
+            }}
+          />
+        </div>
       </div>
 
       {/* Main */}
       <div className="max-w-4xl mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Question Area */}
-          <div className="flex-1">
-            <div
-              key={currentQuestion?.id}
-              className="animate-fade-in"
-            >
-                <Card className="border-border/50">
+          <div className="flex-1">              <div
+                key={currentQuestion?.id}
+                className="motion-safe:animate-fade-in motion-safe:animate-slide-up"
+              >
+                <Card className="border-border/50 shadow-sm overflow-hidden">
                   <CardContent className="p-5 sm:p-6">
                     {/* Question Header */}
-                    <div className="flex items-center gap-2 mb-4">
-                      <Badge variant="outline" className="font-mono">
-                        প্রশ্ন {currentIndex + 1}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">/ {questions.length}</span>
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="inline-flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary font-bold text-xs font-mono">
+                          {toBengaliNumerals(currentIndex + 1)}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-mono">
+                          / {toBengaliNumerals(questions.length)}
+                        </span>
+                      </div>
                       {totalBatches > 1 && (
-                        <Badge variant="secondary" className="text-[10px] gap-1">
+                        <Badge variant="secondary" className="text-[10px] gap-1 h-5">
                           <Layers className="size-3" />
-                          ব্যাচ {currentBatch + 1}
+                          ব্যাচ {toBengaliNumerals(currentBatch + 1)}
                         </Badge>
                       )}
                     </div>
 
                     {/* Question Text */}
-                    <RichContentRenderer content={currentQuestion?.text || ''} className="text-lg font-medium mb-6 leading-relaxed" />
+                    <RichContentRenderer
+                      content={currentQuestion?.text || ''}
+                      className="text-base sm:text-lg font-medium mb-6 leading-relaxed [&_img]:rounded-lg [&_img]:border [&_img]:max-h-64 [&_img]:mx-auto"
+                    />
                     {currentQuestion?.questionImage && (
-                      <div className="mb-4">
-                        <SafeImage src={currentQuestion.questionImage} alt="প্রশ্ন চিত্র" className="max-w-full rounded-lg border max-h-64 mx-auto" />
+                      <div className="mb-6">
+                        <SafeImage
+                          src={currentQuestion.questionImage}
+                          alt="প্রশ্ন চিত্র"
+                          className="w-full rounded-xl border max-h-72 object-contain bg-muted/20"
+                        />
                       </div>
                     )}
 
@@ -610,19 +686,29 @@ export default function ExamSessionPage() {
                       {currentQuestion?.options.map((option) => (
                         <button
                           key={option.key}
-                          className={`w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left ${getOptionStyle(option.key)}`}
+                          className={`w-full flex items-center gap-3.5 p-4 sm:p-5 rounded-xl border-2 transition-all duration-200 text-left group ${getOptionStyle(option.key)}`}
                           onClick={() => handleSelectOption(option.key)}
                         >
-                          <span className={`flex items-center justify-center size-8 rounded-full border-2 font-semibold text-sm shrink-0 ${
+                          <span className={`flex items-center justify-center size-9 min-w-[36px] rounded-full border-2 font-bold text-sm shrink-0 transition-all duration-200 ${
                             selectedAnswer === option.key
-                              ? 'border-primary bg-primary text-primary-foreground'
-                              : 'border-current'
+                              ? 'border-primary bg-primary text-primary-foreground shadow-sm shadow-primary/20'
+                              : 'border-muted-foreground/30 text-muted-foreground group-hover:border-primary/40 group-hover:text-primary/70'
                           }`}>
                             {option.key}
                           </span>
-                          <RichContentRenderer content={option.text} inline className="text-sm sm:text-base" />
+                          <div className="flex-1 min-w-0">
+                            <RichContentRenderer
+                              content={option.text}
+                              inline
+                              className="text-sm sm:text-base leading-relaxed"
+                            />
+                          </div>
                           {option.image && (
-                            <SafeImage src={option.image} alt={`অপশন ${option.key}`} className="ml-auto max-w-full rounded-lg border max-h-20" />
+                            <SafeImage
+                              src={option.image}
+                              alt={`অপশন ${option.key}`}
+                              className="size-12 shrink-0 rounded-lg border object-cover"
+                            />
                           )}
                         </button>
                       ))}
@@ -631,8 +717,8 @@ export default function ExamSessionPage() {
                 </Card>
               </div>
 
-            {/* Navigation */}
-            <div className="flex items-center justify-between mt-4">
+            {/* Desktop Navigation */}
+            <div className="hidden sm:flex items-center justify-between mt-4">
               <Button
                 variant="outline"
                 onClick={handlePrev}
@@ -642,12 +728,6 @@ export default function ExamSessionPage() {
                 <ChevronLeft className="size-4" />
                 আগের
               </Button>
-
-              <div className="flex gap-2 sm:hidden">
-                <Button variant="ghost" size="icon" onClick={() => setShowPalette(!showPalette)}>
-                  <BookOpen className="size-5" />
-                </Button>
-              </div>
 
               <div className="flex items-center gap-2">
                 <Button variant="ghost" onClick={handleSkip} className="gap-1.5">
@@ -739,54 +819,120 @@ export default function ExamSessionPage() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </div>            {/* Mobile Bottom Action Bar */}
+            <div className="sm:hidden fixed inset-x-0 bottom-0 z-40 bg-background/95 backdrop-blur-sm border-t border-border/50 safe-bottom">
+              <div className="flex items-center justify-between px-3 py-2.5 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePrev}
+                  disabled={currentIndex === 0}
+                  className="gap-1.5 h-10 flex-1 min-w-0"
+                >
+                  <ChevronLeft className="size-4 shrink-0" />
+                  <span className="text-xs truncate">আগের</span>
+                </Button>
 
-        {/* Mobile Question Palette Sheet */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPalette(!showPalette)}
+                  className="size-10 shrink-0 relative"
+                >
+                  <BookOpen className="size-4" />
+                  <span className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-primary text-[9px] text-primary-foreground font-bold flex items-center justify-center">
+                    {toBengaliNumerals(answeredCount)}
+                  </span>
+                </Button>
+
+                {currentIndex < questions.length - 1 ? (
+                  <Button
+                    size="sm"
+                    onClick={handleNext}
+                    className="gap-1.5 h-10 flex-1 min-w-0 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                  >
+                    <span className="text-xs truncate">পরের</span>
+                    <ChevronRight className="size-4 shrink-0" />
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    className="gap-1.5 h-10 flex-1 min-w-0 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white"
+                    disabled={submitting}
+                    onClick={openSubmitDialog}
+                  >
+                    {submitting ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+                    <span className="text-xs">জমা দিন</span>
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Bottom Spacer for Mobile Action Bar */}
+            <div className="sm:hidden h-[4.5rem]" />
+
+            {/* Mobile Question Palette Sheet */}
         {showPalette && (
-          <div
-            className="fixed inset-x-0 bottom-0 z-50 bg-background border-t rounded-t-2xl p-4 shadow-lg lg:hidden max-h-[70vh] overflow-y-auto animate-slide-up"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-semibold text-sm">প্রশ্ন প্যালেট</h4>
-              <Button variant="ghost" size="icon" onClick={() => setShowPalette(false)}>
-                <ChevronRight className="size-4" />
-              </Button>
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-50 bg-black/40 lg:hidden motion-safe:animate-fade-in"
+              onClick={() => setShowPalette(false)}
+            />
+            <div
+              className="fixed inset-x-0 bottom-0 z-50 bg-background border-t rounded-t-2xl p-5 shadow-2xl lg:hidden max-h-[75vh] overflow-y-auto motion-safe:animate-slide-up"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h4 className="font-semibold text-sm">প্রশ্ন প্যালেট</h4>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    {toBengaliNumerals(answeredCount)} উত্তর · {toBengaliNumerals(questions.length - answeredCount)} বাকি
+                  </p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setShowPalette(false)} className="size-8">
+                  <ChevronRight className="size-4" />
+                </Button>
+              </div>
+              <QuestionPalette {...paletteProps} />
+              {totalBatches > 1 && (
+                <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
+                  {Array.from({ length: totalBatches }).map((_, i) => {
+                    const batchStart = i * BATCH_SIZE + 1
+                    const batchEnd = Math.min((i + 1) * BATCH_SIZE, questions.length)
+                    return (
+                      <Button
+                        key={i}
+                        variant={paletteBatch === i ? 'default' : 'outline'}
+                        size="sm"
+                        className="h-7 text-xs px-2.5"
+                        onClick={() => {
+                          setPaletteBatch(i)
+                          setCurrentIndex(i * BATCH_SIZE)
+                        }}
+                      >
+                        {toBengaliNumerals(batchStart)}-{toBengaliNumerals(batchEnd)}
+                      </Button>
+                    )
+                  })}
+                </div>
+              )}
+              <Separator className="my-4" />
+              <div className="flex items-center justify-around text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <div className="size-2.5 rounded-sm bg-emerald-500" />
+                  <span>উত্তর ({toBengaliNumerals(answeredCount)})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="size-2.5 rounded-sm bg-amber-500" />
+                  <span>ভিজিট ({toBengaliNumerals(visitedQuestions.size)})</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="size-2.5 rounded-sm bg-muted" />
+                  <span>বাকি ({toBengaliNumerals(questions.length - visitedQuestions.size)})</span>
+                </div>
+              </div>
             </div>
-            <QuestionPalette {...paletteProps} />
-            {totalBatches > 1 && (
-              <div className="mt-3 flex items-center justify-center gap-2 flex-wrap">
-                {Array.from({ length: totalBatches }).map((_, i) => {
-                  const batchStart = i * BATCH_SIZE + 1
-                  const batchEnd = Math.min((i + 1) * BATCH_SIZE, questions.length)
-                  return (
-                    <Button
-                      key={i}
-                      variant={paletteBatch === i ? 'default' : 'outline'}
-                      size="sm"
-                      className="h-7 text-xs px-2"
-                      onClick={() => setPaletteBatch(i)}
-                    >
-                      {batchStart}-{batchEnd}
-                    </Button>
-                  )
-                })}
-              </div>
-            )}
-            <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <div className="size-2.5 rounded bg-emerald-500" />
-                <span>উত্তর ({answeredCount})</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="size-2.5 rounded bg-amber-500" />
-                <span>ভিজিট</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="size-2.5 rounded bg-muted" />
-                <span>বাকি</span>
-              </div>
-            </div>
-          </div>
+          </>
         )}
       </div>
 

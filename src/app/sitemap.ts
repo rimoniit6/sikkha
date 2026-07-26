@@ -41,7 +41,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     content = await getCachedUrls()
   } catch {
-    content = { classes: [], subjects: [], chapters: [], notices: [], suggestions: [] }
+    content = { classes: [], subjects: [], chapters: [], notices: [], suggestions: [], blogPosts: [], blogCategories: [], blogTags: [] }
   }
 
   const { classes, subjects, chapters, notices, suggestions, blogPosts, blogCategories, blogTags } = content

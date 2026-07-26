@@ -104,7 +104,7 @@ export function ChapterManager({
     }
     setSaving(true)
     try {
-      const slug = chapterForm.slug || generateSlug(chapterForm.name)
+      const slug = chapterForm.slug || slugify(chapterForm.name)
       const body = {
         ...(editingChapter ? { id: editingChapter.id } : {}),
         name: chapterForm.name,

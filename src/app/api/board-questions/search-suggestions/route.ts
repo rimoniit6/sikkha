@@ -47,8 +47,8 @@ export async function GET(request: Request) {
         where: {
           isActive: true,
           OR: [
-            { name: { contains: q } },
-            { slug: { contains: q } },
+            { name: { contains: q, mode: 'insensitive' } },
+            { slug: { contains: q, mode: 'insensitive' } },
           ],
         },
         select: { name: true },
@@ -57,14 +57,14 @@ export async function GET(request: Request) {
       db.subject.findMany({
         where: {
           isActive: true,
-          name: { contains: q },
+          name: { contains: q, mode: 'insensitive' },
         },
         select: { name: true },
         take: 3,
       }),
       db.chapter.findMany({
         where: {
-          name: { contains: q },
+          name: { contains: q, mode: 'insensitive' },
         },
         select: { name: true },
         take: 3,
@@ -73,7 +73,7 @@ export async function GET(request: Request) {
       db.examYear.findMany({
         where: {
           isActive: true,
-          year: { contains: q },
+          year: { contains: q, mode: 'insensitive' },
         },
         select: { year: true },
         take: 3,

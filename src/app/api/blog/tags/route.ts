@@ -6,7 +6,7 @@ import { handleApiError } from '@/lib/errors'
 export async function GET(request: Request) {
   try {
     const rateCheck = await applyRateLimit(apiLimiter, request)
-    if (rateCheck) return rateCheck
+    if ('error' in rateCheck) return rateCheck.error
 
     const data = await db.blogTag.findMany({
       include: { _count: { select: { posts: { where: { post: { status: 'PUBLISHED', deletedAt: null, publishedAt: { lte: new Date() } } } } } } },

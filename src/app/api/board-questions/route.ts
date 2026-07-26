@@ -115,7 +115,7 @@ export async function GET(request: Request) {
     if (difficultyList.length > 0) baseWhere.difficulty = { in: difficultyList }
     if (topicList.length > 0) baseWhere.topic = { in: topicList }
 
-    const searchFilter = search ? { contains: search } : undefined
+    const searchFilter = search ? { contains: search, mode: 'insensitive' } : undefined
 
     const accessFilter =
       access === 'free' ? { isPremium: false }

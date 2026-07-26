@@ -22,13 +22,13 @@ export async function GET(request: Request) {
 
     const [mcqs, cqs, lectures, suggestions] = await Promise.allSettled([
       db.mCQ.findMany({
-        where: { isActive: true, question: { contains: q }, ...classFilter },
+        where: { isActive: true, question: { contains: q, mode: 'insensitive' }, ...classFilter },
         select: { id: true, question: true },
         take: 3,
         orderBy: { createdAt: 'desc' },
       }),
       db.cQ.findMany({
-        where: { isActive: true, uddeepok: { contains: q }, ...classFilter },
+        where: { isActive: true, uddeepok: { contains: q, mode: 'insensitive' }, ...classFilter },
         select: { id: true, uddeepok: true },
         take: 3,
         orderBy: { createdAt: 'desc' },
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       db.lecture.findMany({
         where: {
           isActive: true,
-          title: { contains: q },
+          title: { contains: q, mode: 'insensitive' },
           ...(classLevel
             ? { chapter: { subject: { class: { slug: classLevel } } } }
             : {}),
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
         orderBy: { createdAt: 'desc' },
       }),
       db.suggestion.findMany({
-        where: { isActive: true, title: { contains: q }, ...(classLevel ? { classId: classLevel } : {}) },
+        where: { isActive: true, title: { contains: q, mode: 'insensitive' }, ...(classLevel ? { classId: classLevel } : {}) },
         select: { id: true, title: true },
         take: 3,
         orderBy: { createdAt: 'desc' },

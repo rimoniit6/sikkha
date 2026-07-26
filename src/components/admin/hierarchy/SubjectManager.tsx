@@ -110,7 +110,7 @@ export function SubjectManager({
     }
     setSaving(true)
     try {
-      const slug = subjectForm.slug || generateSlug(subjectForm.name)
+      const slug = subjectForm.slug || slugify(subjectForm.name)
       const body = {
         ...(editingSubject ? { id: editingSubject.id } : {}),
         name: subjectForm.name,

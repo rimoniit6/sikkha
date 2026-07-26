@@ -49,11 +49,11 @@ export async function GET(request: Request) {
             Prisma.sql`
               SELECT "subjectId" AS subject_id,
                      COUNT(*) AS total,
-                     SUM(CASE WHEN "isPremium" = 0 THEN 1 ELSE 0 END) AS free,
+                     SUM(CASE WHEN "isPremium" = false THEN 1 ELSE 0 END) AS free,
                      SUM(CASE WHEN "board" IS NOT NULL AND "year" IS NOT NULL THEN 1 ELSE 0 END) AS board,
-                     SUM(CASE WHEN "board" IS NOT NULL AND "year" IS NOT NULL AND "isPremium" = 0 THEN 1 ELSE 0 END) AS free_board
+                     SUM(CASE WHEN "board" IS NOT NULL AND "year" IS NOT NULL AND "isPremium" = false THEN 1 ELSE 0 END) AS free_board
               FROM "MCQ"
-              WHERE "subjectId" IN (${Prisma.join(allSubjectIds)}) AND "isActive" = 1 AND "deletedAt" IS NULL
+              WHERE "subjectId" IN (${Prisma.join(allSubjectIds)}) AND "isActive" = true AND "deletedAt" IS NULL
               GROUP BY "subjectId"
             `,
           )
@@ -64,11 +64,11 @@ export async function GET(request: Request) {
             Prisma.sql`
               SELECT "subjectId" AS subject_id,
                      COUNT(*) AS total,
-                     SUM(CASE WHEN "isPremium" = 0 THEN 1 ELSE 0 END) AS free,
+                     SUM(CASE WHEN "isPremium" = false THEN 1 ELSE 0 END) AS free,
                      SUM(CASE WHEN "board" IS NOT NULL AND "year" IS NOT NULL THEN 1 ELSE 0 END) AS board,
-                     SUM(CASE WHEN "board" IS NOT NULL AND "year" IS NOT NULL AND "isPremium" = 0 THEN 1 ELSE 0 END) AS free_board
+                     SUM(CASE WHEN "board" IS NOT NULL AND "year" IS NOT NULL AND "isPremium" = false THEN 1 ELSE 0 END) AS free_board
               FROM "CQ"
-              WHERE "subjectId" IN (${Prisma.join(allSubjectIds)}) AND "isActive" = 1 AND "deletedAt" IS NULL
+              WHERE "subjectId" IN (${Prisma.join(allSubjectIds)}) AND "isActive" = true AND "deletedAt" IS NULL
               GROUP BY "subjectId"
             `,
           )

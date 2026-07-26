@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import BlogDetailClient from './BlogDetailClient'
 import { serialize } from '@/lib/serialize'
 import type { Metadata } from 'next'
+import type { BlogPostRecord } from '@/features/blog/types/blog'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -72,6 +73,8 @@ export default async function BlogDetailPage({ params }: Props) {
     }),
   ])
 
+  const TAG_INCLUDE = { include: { tag: { select: { id: true, name: true, slug: true } } } }
+
   // Related posts: by category OR shared tags (fallback)
   const relatedPosts = post.categoryId
     ? await db.blogPost.findMany({
@@ -86,6 +89,7 @@ export default async function BlogDetailPage({ params }: Props) {
         include: {
           author: { select: { id: true, name: true, avatar: true } },
           category: { select: { id: true, name: true, slug: true, color: true } },
+          tags: TAG_INCLUDE,
         },
         orderBy: { publishedAt: 'desc' },
         take: 3,
@@ -104,6 +108,7 @@ export default async function BlogDetailPage({ params }: Props) {
         include: {
           author: { select: { id: true, name: true, avatar: true } },
           category: { select: { id: true, name: true, slug: true, color: true } },
+          tags: TAG_INCLUDE,
         },
         orderBy: { publishedAt: 'desc' },
         take: 3,
@@ -112,8 +117,8 @@ export default async function BlogDetailPage({ params }: Props) {
   // Increment view count asynchronously
   db.blogPost.update({ where: { id: post.id }, data: { viewCount: { increment: 1 } } }).catch(() => {})
 
-  const serialized = serialize(post)
-  const serializedRelated = serialize(relatedPosts)
+  const serialized = serialize(post) as unknown as BlogPostRecord
+  const serializedRelated = serialize(relatedPosts) as unknown as BlogPostRecord[]
 
   // JSON-LD structured data
   const jsonLd = {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useTheme } from 'next-themes'
-import { Search, Menu, X, Sun, Moon, User, GraduationCap, BookOpen, LogIn, LogOut, LayoutDashboard, Crown } from 'lucide-react'
+import { Search, Menu, X, Sun, Moon, User, GraduationCap, BookOpen, LogIn, LogOut, LayoutDashboard, Crown, Target } from 'lucide-react'
 import NotificationBell from '@/components/notifications/NotificationBell'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +17,7 @@ import { useLearningPreference } from '@/providers/LearningPreferenceProvider'
 import { useHierarchyMetadata } from '@/hooks/use-hierarchy-metadata'
 import { useSiteConfig } from '@/hooks/use-metadata'
 import { useNavigation } from '@/hooks/use-navigation'
+import { useFocusMode } from '@/store/focus-mode'
 import Image from 'next/image'
 
 const getUserInitials = (name: string) =>
@@ -24,10 +25,12 @@ const getUserInitials = (name: string) =>
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false)
+  const [hidden, setHidden] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const lastScrollY = useRef(0)
   const { theme, setTheme } = useTheme()
   const currentRoute = useCurrentRoute()
   const navigate = useRouterStore((s) => s.navigate)
@@ -36,6 +39,7 @@ export default function Header() {
   const { config } = useSiteConfig()
   const { headerNav, loading: navLoading } = useNavigation()
   const { learningMode, classLevel, setPreference } = useLearningPreference()
+  const { active: focusActive, enterFocusMode } = useFocusMode()
   const { classLevelLabels, classOptions } = useHierarchyMetadata()
 
   const currentClassLabel = classLevel ? (classLevelLabels[classLevel] || classLevel) : null
@@ -51,7 +55,18 @@ export default function Header() {
     let frameId: number
     const handleScroll = () => {
       cancelAnimationFrame(frameId)
-      frameId = requestAnimationFrame(() => setScrolled(window.scrollY > 10))
+      frameId = requestAnimationFrame(() => {
+        const currentY = window.scrollY
+        setScrolled(currentY > 10)
+        // Hide on scroll down, show on scroll up
+        if (currentY > 80) {
+          if (currentY > lastScrollY.current) setHidden(true)
+          else setHidden(false)
+        } else {
+          setHidden(false)
+        }
+        lastScrollY.current = currentY
+      })
     }
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => { window.removeEventListener('scroll', handleScroll); cancelAnimationFrame(frameId) }
@@ -100,6 +115,8 @@ export default function Header() {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        hidden ? '-translate-y-full' : 'translate-y-0'
+      } ${
         scrolled
           ? 'shadow-lg shadow-black/5 bg-background/95 backdrop-blur-md border-b border-border/50'
           : 'bg-background/80 backdrop-blur-md border-b border-transparent'
@@ -211,6 +228,18 @@ export default function Header() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            )}
+
+            {/* Focus Mode Toggle */}
+            {isAuthenticated && mounted && !focusActive && (
+              <button
+                onClick={enterFocusMode}
+                className="hidden sm:flex items-center justify-center w-10 h-10 rounded-lg text-muted-foreground hover:text-edu-primary hover:bg-edu-primary/10 active:bg-edu-primary/20 transition-colors"
+                aria-label="ফোকাস মোড"
+                title="ফোকাস মোড"
+              >
+                <Target className="w-5 h-5" />
+              </button>
             )}
 
             {/* Notification Bell */}

@@ -243,9 +243,17 @@ export async function safeTransaction<T>(
     } catch (error) {
       lastError = error
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        // SQLite/LibSQL transaction conflict
         if (error.code === 'P2034') {
           continue
         }
+      }
+      // PostgreSQL transaction errors — retry on serialization failure or deadlock
+      if (
+        error instanceof Error &&
+        (error.message.includes('40001') || error.message.includes('40P01'))
+      ) {
+        continue
       }
       throw error
     }

@@ -81,12 +81,6 @@ export async function POST(request: Request) {
     if ('error' in rateCheck) return rateCheck.error
 
     const body = await request.json()
-    console.log('Incoming payment payload:', JSON.stringify(body, null, 2))
-    // Temporary debug: re-parse to capture Zod error details on failure
-    const parseResult = createPaymentSchema.safeParse(body)
-    if (!parseResult.success) {
-      console.log('Validation errors:', JSON.stringify(parseResult.error.flatten(), null, 2))
-    }
     const validation = validateBody(createPaymentSchema, body)
     if ('error' in validation) return validation.error
     const {

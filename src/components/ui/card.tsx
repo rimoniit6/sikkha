@@ -2,12 +2,29 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Card({ className, ...props }: React.ComponentProps<"div">) {
+type CardVariant = 'default' | 'glass' | 'compact' | 'interactive'
+
+function Card({
+  className,
+  variant = 'default' as CardVariant,
+  ...props
+}: React.ComponentProps<"div"> & {
+  /** Card visual variant. Default: 'default' */
+  variant?: CardVariant
+}) {
   return (
     <div
       data-slot="card"
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm transition-shadow duration-200 hover:shadow-md",
+        "bg-card text-card-foreground flex flex-col rounded-xl border shadow-sm transition-shadow duration-200",
+        // Default variant
+        variant === 'default' && "gap-6 py-6 hover:shadow-md",
+        // Glass variant
+        variant === 'glass' && "card-glass gap-5 py-5",
+        // Compact variant
+        variant === 'compact' && "card-compact gap-3 py-3",
+        // Interactive variant
+        variant === 'interactive' && "card-interactive gap-5 py-5 hover:shadow-md",
         className
       )}
       {...props}
@@ -90,3 +107,4 @@ export {
   CardDescription,
   CardContent,
 }
+export type { CardVariant }

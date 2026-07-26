@@ -27,11 +27,11 @@ export async function GET(request: Request) {
     if (isActiveParam !== null && isActiveParam !== '') where.isActive = isActiveParam === 'true'
     if (search) {
       where.OR = [
-        { user: { name: { contains: search } } },
-        { user: { email: { contains: search } } },
-        { user: { id: { contains: search } } },
-        { contentTitle: { contains: search } },
-        { transactionId: { contains: search } },
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+        { user: { id: { contains: search, mode: 'insensitive' } } },
+        { contentTitle: { contains: search, mode: 'insensitive' } },
+        { transactionId: { contains: search, mode: 'insensitive' } },
       ]
     }
 

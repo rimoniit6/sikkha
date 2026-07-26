@@ -34,6 +34,7 @@ export async function GET(request: Request) {
           title: true,
           message: true,
           type: true,
+          priority: true,
           isRead: true,
           link: true,
           createdAt: true,

@@ -53,9 +53,9 @@ export async function GET(request: Request) {
 
     if (search) {
       where.OR = [
-        { title: { contains: search } },
-        { slug: { contains: search } },
-        { description: { contains: search } },
+        { title: { contains: search, mode: 'insensitive' } },
+        { slug: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
       ]
     }
     if (classLevel) {

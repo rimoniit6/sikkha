@@ -109,9 +109,9 @@ export async function GET(request: Request) {
     }
     if (q) {
       where.OR = [
-        { action: { contains: q } },
-        { entityType: { contains: q } },
-        { entityId: { contains: q } },
+        { action: { contains: q, mode: 'insensitive' } },
+        { entityType: { contains: q, mode: 'insensitive' } },
+        { entityId: { contains: q, mode: 'insensitive' } },
       ]
     }
 

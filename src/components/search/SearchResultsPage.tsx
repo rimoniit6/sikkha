@@ -15,6 +15,7 @@ import {
 ArrowLeft,
 BookOpen,
 ChevronRight,
+Clock,
 Crown,
 FileQuestion,
 FileText,
@@ -22,8 +23,10 @@ GraduationCap,
 Lightbulb,
 Loader2,
 Megaphone,
+Mic,
 Package,
 Search,
+Trash2,
 X,
 } from 'lucide-react'
 import { useCallback,useEffect,useMemo,useState } from 'react'
@@ -125,6 +128,79 @@ const _FALLBACK_TYPE_FILTERS = [
   { key: 'bundle', label: 'বান্ডেল', icon: Package },
 ] as const
 
+// ─── Recent Searches Utilities ─────────────────────────────────
+
+const RECENT_SEARCHES_KEY = 'edu-recent-searches'
+const MAX_RECENT = 10
+
+function getRecentSearches(): string[] {
+  try {
+    const raw = localStorage.getItem(RECENT_SEARCHES_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
+function saveRecentSearch(term: string) {
+  try {
+    const recent = getRecentSearches().filter(s => s !== term)
+    recent.unshift(term)
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent.slice(0, MAX_RECENT)))
+  } catch {}
+}
+
+function clearRecentSearches() {
+  try { localStorage.removeItem(RECENT_SEARCHES_KEY) } catch {}
+}
+
+// ─── Text Highlight Utility ────────────────────────────────────
+
+/** Extract plain text from HTML string (client-side only) */
+function htmlToText(html: string): string {
+  if (!html) return ''
+  const div = document.createElement('div')
+  div.innerHTML = html
+  return div.textContent || div.innerText || ''
+}
+
+function HighlightText({ text, query }: { text: string; query: string }) {
+  if (!query.trim() || !text) return <>{text}</>
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const parts = text.split(new RegExp(`(${escaped})`, 'gi'))
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === query.toLowerCase()
+          ? <mark key={i} className="bg-emerald-100 dark:bg-emerald-900/50 text-foreground rounded-sm px-0.5">{part}</mark>
+          : part
+      )}
+    </>
+  )
+}
+
+// ─── Search Results Skeleton ────────────────────────────────────
+
+function SearchSkeleton() {
+  return (
+    <div className="space-y-4 mt-6" role="status" aria-live="polite" aria-label="লোড হচ্ছে">
+      {[0,1,2,3].map((i) => (
+        <div key={i} className="bg-card rounded-xl border border-border/50 p-4 motion-safe:animate-pulse-soft">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-muted shrink-0" />
+            <div className="flex-1 space-y-2 min-w-0">
+              <div className="h-4 bg-muted rounded w-3/4" />
+              <div className="h-3 bg-muted/60 rounded w-1/2" />
+              <div className="flex gap-2">
+                <div className="h-5 w-12 bg-muted/60 rounded-full" />
+                <div className="h-5 w-16 bg-muted/60 rounded-full" />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── Component ──────────────────────────────────────────────────
 
 export default function SearchResultsPage() {
@@ -157,6 +233,7 @@ export default function SearchResultsPage() {
   const performSearch = useCallback(async (searchQuery: string, type: string) => {
     if (!searchQuery.trim()) return
 
+    saveRecentSearch(searchQuery.trim())
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -265,25 +342,35 @@ export default function SearchResultsPage() {
             <Button variant="ghost" size="icon" onClick={() => navigate('home')} className="shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+            <div className="relative flex-1 group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-emerald-500" />
+              <input
                 placeholder="কোর্স, অধ্যায়, প্রশ্ন খুঁজুন..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="pl-9 pr-10 h-11 text-base bg-muted/30 border-border/50 focus:border-emerald-400"
+                className="w-full h-12 pl-10 pr-20 text-base rounded-xl bg-muted/30 border border-border/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 outline-none text-foreground placeholder:text-muted-foreground/60 transition-all duration-200"
                 autoFocus
                 aria-label="সার্চ করুন"
               />
-              {query && (
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                {query && (
+                  <button
+                    onClick={() => setQuery('')}
+                    className="p-1.5 rounded-full hover:bg-muted transition-colors"
+                    aria-label="সার্চ মুছুন"
+                  >
+                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                )}
                 <button
-                  onClick={() => setQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted"
+                  className="p-1.5 rounded-full hover:bg-muted transition-colors text-muted-foreground/40 hover:text-muted-foreground"
+                  aria-label="ভয়েস সার্চ"
+                  title="ভয়েস সার্চ (শীঘ্রই আসছে)"
                 >
-                  <X className="h-4 w-4 text-muted-foreground" />
+                  <Mic className="h-3.5 w-3.5" />
                 </button>
-              )}
+              </div>
             </div>
             <Button
               onClick={handleSearch}
@@ -362,40 +449,77 @@ export default function SearchResultsPage() {
 
       {/* Results */}
       <div className="max-w-4xl mx-auto px-4 mt-6">
-        {/* Loading State */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-20" role="status" aria-live="polite">
-            <Loader2 className="h-8 w-8 animate-spin text-emerald-600 mb-4" />
-            <p className="text-muted-foreground">খুঁজছি...</p>
-          </div>
-        )}
+        {/* Loading State — Realistic Search Skeleton */}
+        {loading && <SearchSkeleton />}
 
-        {/* Initial State */}
-        {!loading && !searched && (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 mb-4">
-              <Search className="h-12 w-12 text-emerald-600/50" />
+        {/* Initial State — Premium Empty State */}
+        {!loading && !searched && (() => {
+          const recentSearches = getRecentSearches()
+          return (
+            <div className="flex flex-col items-center justify-center py-12 sm:py-20">
+              <div className="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 mb-4">
+                <Search className="h-10 w-10 sm:h-12 sm:w-12 text-emerald-600/50" />
+              </div>
+              <h2 className="text-xl font-bold mb-2">কন্টেন্ট খুঁজুন</h2>
+              <p className="text-muted-foreground text-center max-w-sm text-sm">
+                লেকচার, MCQ, সৃজনশীল প্রশ্ন, সাজেশন, নোটিশ এবং বান্ডেল খুঁজতে উপরে কিছু লিখুন
+              </p>
+
+              {/* Recent Searches */}
+              {recentSearches.length > 0 && (
+                <div className="w-full max-w-md mt-8">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                      <Clock className="size-3" />
+                      সাম্প্রতিক অনুসন্ধান
+                    </h3>
+                    <button
+                      onClick={clearRecentSearches}
+                      className="text-[10px] text-muted-foreground/60 hover:text-destructive transition-colors flex items-center gap-1"
+                    >
+                      <Trash2 className="size-3" />
+                      মুছুন
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {recentSearches.slice(0, 8).map((term) => (
+                      <button
+                        key={term}
+                        onClick={() => { setQuery(term); performSearch(term, 'all') }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-muted/50 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 transition-colors"
+                      >
+                        <Clock className="size-3 text-muted-foreground/50" />
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Popular Trends */}
+              <div className="w-full max-w-md mt-6">
+                <h3 className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 mb-3">
+                  <Lightbulb className="size-3" />
+                  জনপ্রিয় অনুসন্ধান
+                </h3>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {(config?.searchSuggestions && config.searchSuggestions.length > 0 
+                    ? config.searchSuggestions 
+                    : ['গণিত', 'পদার্থবিজ্ঞান', 'রসায়ন', 'জীববিজ্ঞান', 'বাংলা', 'ইংরেজি']
+                  ).map((term) => (
+                    <button
+                      key={term}
+                      onClick={() => { setQuery(term); performSearch(term, 'all') }}
+                      className="px-3 py-1.5 rounded-full text-sm bg-muted/50 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 transition-colors"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <h2 className="text-xl font-bold mb-2">কন্টেন্ট খুঁজুন</h2>
-            <p className="text-muted-foreground text-center max-w-sm">
-              লেকচার, MCQ, সৃজনশীল প্রশ্ন, সাজেশন, নোটিশ এবং বান্ডেল খুঁজতে উপরে কিছু লিখুন
-            </p>
-            <div className="flex flex-wrap gap-2 mt-6 justify-center">
-              {(config?.searchSuggestions && config.searchSuggestions.length > 0 
-                ? config.searchSuggestions 
-                : ['গণিত', 'পদার্থবিজ্ঞান', 'রসায়ন', 'জীববিজ্ঞান', 'বাংলা', 'ইংরেজি']
-              ).map((term) => (
-                <button
-                  key={term}
-                  onClick={() => { setQuery(term); performSearch(term, 'all') }}
-                  className="px-3 py-1.5 rounded-full text-sm bg-muted/50 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 transition-colors"
-                >
-                  {term}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* No Results */}
         {!loading && searched && total === 0 && (
@@ -407,6 +531,20 @@ export default function SearchResultsPage() {
             <p className="text-muted-foreground text-center">
               &quot;{query}&quot; এর জন্য কোনো কন্টেন্ট পাওয়া যায়নি। অন্য কিছু দিয়ে খুঁজে দেখুন।
             </p>
+            <div className="flex flex-wrap gap-2 mt-6 justify-center">
+              {(config?.searchSuggestions && config.searchSuggestions.length > 0
+                ? config.searchSuggestions
+                : ['গণিত', 'পদার্থবিজ্ঞান', 'রসায়ন', 'জীববিজ্ঞান', 'বাংলা', 'ইংরেজি']
+              ).map((term) => (
+                <button
+                  key={term}
+                  onClick={() => { setQuery(term); performSearch(term, 'all') }}
+                  className="px-3 py-1.5 rounded-full text-sm bg-muted/50 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300 transition-colors"
+                >
+                  {term}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
@@ -434,7 +572,7 @@ export default function SearchResultsPage() {
                             <BookOpen className="h-5 w-5 text-emerald-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm line-clamp-1">{lecture.title}</h4>
+                            <h4 className="font-semibold text-sm line-clamp-1"><HighlightText text={lecture.title} query={query} /></h4>
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
                               {lecture.chapter?.subject?.class && <Badge variant="outline" className="text-[10px] h-5">{classLabelMap[lecture.chapter.subject.class.slug] || lecture.chapter.subject.class.name}</Badge>}
                               {lecture.chapter?.subject && <Badge variant="outline" className="text-[10px] h-5">{lecture.chapter.subject.name}</Badge>}
@@ -472,6 +610,7 @@ export default function SearchResultsPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <RichContentRenderer content={mcq.question} className="font-semibold text-sm line-clamp-2" inline />
+                            <div className="text-xs text-muted-foreground mt-1"><HighlightText text={htmlToText(mcq.question)} query={query} /></div>
                             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                               {mcq.chapter?.subject?.class && <Badge variant="outline" className="text-[10px] h-5">{classLabelMap[mcq.chapter.subject.class.slug] || mcq.chapter.subject.class.name}</Badge>}
                               {mcq.chapter?.subject && <Badge variant="outline" className="text-[10px] h-5">{mcq.chapter.subject.name}</Badge>}
@@ -508,6 +647,7 @@ export default function SearchResultsPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <RichContentRenderer content={cq.uddeepok} className="font-semibold text-sm line-clamp-2" inline />
+                            <div className="text-xs text-muted-foreground mt-1"><HighlightText text={htmlToText(cq.uddeepok)} query={query} /></div>
                             {cq.uddeepokImage && (
                               <SafeImage src={cq.uddeepokImage} alt="উদ্দীপক চিত্র" className="mt-2 max-w-full rounded-lg border max-h-40" />
                             )}
@@ -546,7 +686,7 @@ export default function SearchResultsPage() {
                             <Lightbulb className="h-5 w-5 text-orange-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm line-clamp-1">{suggestion.title}</h4>
+                            <h4 className="font-semibold text-sm line-clamp-1"><HighlightText text={suggestion.title} query={query} /></h4>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             {suggestion.isPremium && <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300 gap-1 text-[10px]"><Crown className="h-3 w-3" /> ৳{suggestion.price}</Badge>}
@@ -577,7 +717,7 @@ export default function SearchResultsPage() {
                             <Megaphone className="h-5 w-5 text-cyan-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm line-clamp-1">{notice.title}</h4>
+                            <h4 className="font-semibold text-sm line-clamp-1"><HighlightText text={notice.title} query={query} /></h4>
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant="outline" className="text-[10px] h-5">{notice.type === 'pdf' ? 'PDF' : notice.type === 'link' ? 'লিংক' : 'টেক্সট'}</Badge>
                               {notice.isPinned && <Badge className="bg-red-100 text-red-700 text-[10px] h-5">পিন করা</Badge>}
@@ -609,7 +749,7 @@ export default function SearchResultsPage() {
                             <Package className="h-5 w-5 text-rose-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-sm line-clamp-1">{bundle.title}</h4>
+                            <h4 className="font-semibold text-sm line-clamp-1"><HighlightText text={bundle.title} query={query} /></h4>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <div className="text-right">

@@ -41,7 +41,7 @@ export default function NoticeBar() {
   if (!currentNotice) return null
 
   return (
-    <div className="sticky top-16 z-40">
+    <div className="relative z-40">
       <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-800 dark:via-teal-800 dark:to-cyan-800 overflow-hidden notice-reveal"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

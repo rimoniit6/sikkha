@@ -25,11 +25,11 @@ export async function GET(request: Request) {
     if (contentType) where.contentType = contentType
     if (q) {
       where.OR = [
-        { transactionId: { contains: q } },
-        { paymentNumber: { contains: q } },
-        { contentTitle: { contains: q } },
-        { user: { name: { contains: q } } },
-        { user: { email: { contains: q } } },
+        { transactionId: { contains: q, mode: 'insensitive' } },
+        { paymentNumber: { contains: q, mode: 'insensitive' } },
+        { contentTitle: { contains: q, mode: 'insensitive' } },
+        { user: { name: { contains: q, mode: 'insensitive' } } },
+        { user: { email: { contains: q, mode: 'insensitive' } } },
       ]
     }
 

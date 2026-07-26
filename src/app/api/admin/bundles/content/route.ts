@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     switch (type) {
       case 'mcq': {
         const mcqWhere: Record<string, unknown> = { isActive: true }
-        if (q) mcqWhere.question = { contains: q }
+        if (q) mcqWhere.question = { contains: q, mode: 'insensitive' }
         if (classLevel) mcqWhere.classLevel = classLevel
         if (subjectId) mcqWhere.subjectId = subjectId
         if (chapterId) mcqWhere.chapterId = chapterId
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
 
       case 'cq': {
         const cqWhere: Record<string, unknown> = { isActive: true }
-        if (q) cqWhere.uddeepok = { contains: q }
+        if (q) cqWhere.uddeepok = { contains: q, mode: 'insensitive' }
         if (classLevel) cqWhere.classLevel = classLevel
         if (subjectId) cqWhere.subjectId = subjectId
         if (chapterId) cqWhere.chapterId = chapterId
@@ -108,7 +108,7 @@ export async function GET(request: Request) {
 
       case 'lecture': {
         const lectureWhere: Record<string, unknown> = { isActive: true }
-        if (q) lectureWhere.title = { contains: q }
+        if (q) lectureWhere.title = { contains: q, mode: 'insensitive' }
 
         const lectures = await db.lecture.findMany({
           where: lectureWhere,
@@ -133,7 +133,7 @@ export async function GET(request: Request) {
 
       case 'exam': {
         const examWhere: Record<string, unknown> = { isActive: true }
-        if (q) examWhere.title = { contains: q }
+        if (q) examWhere.title = { contains: q, mode: 'insensitive' }
         if (classLevel) examWhere.classLevel = classLevel
 
         const exams = await db.exam.findMany({

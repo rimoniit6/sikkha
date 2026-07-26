@@ -11,6 +11,7 @@ export interface Notification {
   title: string
   message: string
   type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR'
+  priority?: 'critical' | 'high' | 'medium' | 'low'
   isRead: boolean
   link: string | null
   createdAt: string
