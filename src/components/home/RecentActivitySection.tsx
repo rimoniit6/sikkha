@@ -1,20 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Clock, Eye, BookOpen, HelpCircle, FileQuestion, ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { api } from '@/lib/api-client'
-import { useAuthUser } from '@/store/auth'
 import { useRouterStore } from '@/store/router'
-
-interface RecentlyViewedItem {
-  id: string
-  contentId: string
-  contentType: string
-  title: string
-  viewedAt: string
-}
+import { useRecentlyViewed } from '@/hooks/user/use-recently-viewed'
 
 const TYPE_CONFIG: Record<string, { icon: React.ElementType; label: string; color: string }> = {
   lecture: { icon: BookOpen, label: 'লেকচার', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-900/40' },
@@ -43,39 +33,15 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 export default function RecentActivitySection() {
-  const user = useAuthUser()
   const navigate = useRouterStore((s) => s.navigate)
-  const [items, setItems] = useState<RecentlyViewedItem[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false)
-      return
-    }
-
-    let cancelled = false
-
-    api.get<{ items: RecentlyViewedItem[] }>('recently-viewed', { limit: 10 })
-      .then((data) => {
-        if (!cancelled && data?.items) {
-          setItems(data.items.slice(0, 6))
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setItems([])
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => { cancelled = true }
-  }, [user?.id])
+  const { data: items, loading } = useRecentlyViewed({ limit: 10 })
 
   if (loading) return null
   if (items.length === 0) return null
 
-  const handleClick = (item: RecentlyViewedItem) => {
+  const visibleItems = items.slice(0, 6)
+
+  const handleClick = (item: typeof visibleItems[0]) => {
     switch (item.contentType) {
       case 'lecture':
         navigate('lecture-viewer', { lectureId: item.contentId })
@@ -103,7 +69,7 @@ export default function RecentActivitySection() {
         </div>
 
         <div className="space-y-2">
-          {items.map((item) => {
+          {visibleItems.map((item) => {
             const config = getTypeConfig(item.contentType)
             const Icon = config.icon
             return (

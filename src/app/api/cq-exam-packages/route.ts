@@ -5,7 +5,6 @@ import { NextResponse } from 'next/server'
 import { toDecimal } from '@/lib/decimal'
 import { validateExamAccess, getExamTimeWindow } from '@/features/shared/exam-engine'
 import logger from '@/lib/logger'
-import { handleApiError } from '@/lib/errors'
 
 function getMaxPracticeAttempts(set: { allowUnlimitedAttempts: boolean; maxAttempts: number | null }): number | null {
   if (set.allowUnlimitedAttempts) return null // unlimited
@@ -455,7 +454,7 @@ export async function POST(request: Request) {
 
       // Block if practice mode limit reached
       if (isPracticeMode && !canPracticeRetake && maxPracticeAttempts !== null && totalAttempts >= maxPracticeAttempts) {
-        console.warn(`[CQ_PRACTICE_BLOCKED] userId=${userId} setId=${setId} packageId=${set.packageId} totalAttempts=${totalAttempts} maxAllowed=${maxPracticeAttempts}`)
+        logger.warn('cq_practice_blocked', { userId, setId, packageId: set.packageId, totalAttempts, maxAllowed: maxPracticeAttempts })
         return apiError('আপনি এই CQ পরীক্ষার সর্বোচ্চ অনুমোদিত সংখ্যক অনুশীলন সম্পন্ন করেছেন।', 400, 'PRACTICE_LIMIT_REACHED')
       }
 
@@ -500,7 +499,7 @@ export async function POST(request: Request) {
       // Graded/published — reject unless practice mode retake (with limit check)
       if (latestSubmission && (latestSubmission.status === 'GRADED' || latestSubmission.status === 'PUBLISHED')) {
         if (isPracticeMode && !canPracticeRetake && maxPracticeAttempts !== null && totalAttempts >= maxPracticeAttempts) {
-          console.warn(`[CQ_PRACTICE_BLOCKED] userId=${userId} setId=${setId} packageId=${set.packageId} totalAttempts=${totalAttempts} maxAllowed=${maxPracticeAttempts}`)
+          logger.warn('cq_practice_blocked', { userId, setId, packageId: set.packageId, totalAttempts, maxAllowed: maxPracticeAttempts })
           return apiError('আপনি এই CQ পরীক্ষার সর্বোচ্চ অনুমোদিত সংখ্যক অনুশীলন সম্পন্ন করেছেন।', 400, 'PRACTICE_LIMIT_REACHED')
         }
         if (isPracticeMode && canPracticeRetake) {

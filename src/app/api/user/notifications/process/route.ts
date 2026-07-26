@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     // Validate context
     const validContexts = [
-      'revision-complete', 'exam-complete', 'streak-update',
+      'dashboard-load', 'revision-complete', 'exam-complete', 'streak-update',
       'content-complete', 'focus-complete', 'login', 'daily-check',
     ]
     if (!validContexts.includes(context)) {

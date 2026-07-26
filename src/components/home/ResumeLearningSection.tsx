@@ -1,52 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { BookOpen, ChevronRight, Play } from 'lucide-react'
+import { ChevronRight, Play } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
-import { api } from '@/lib/api-client'
-import { useAuthUser } from '@/store/auth'
 import { useRouterStore } from '@/store/router'
-
-interface RecentLecture {
-  id: string
-  title: string
-  subject: string
-  chapter?: string
-  progress: number
-  viewedAt?: string
-}
+import { useRecentLectures } from '@/hooks/user/use-recent-lectures'
 
 export default function ResumeLearningSection() {
-  const user = useAuthUser()
   const navigate = useRouterStore((s) => s.navigate)
-  const [lectures, setLectures] = useState<RecentLecture[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false)
-      return
-    }
-
-    let cancelled = false
-
-    api.get<RecentLecture[]>('user/recent-lectures')
-      .then((data) => {
-        if (!cancelled && Array.isArray(data)) {
-          setLectures(data)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setLectures([])
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => { cancelled = true }
-  }, [user?.id])
+  const { data: lectures, loading } = useRecentLectures()
 
   if (loading) return null
   if (lectures.length === 0) return null

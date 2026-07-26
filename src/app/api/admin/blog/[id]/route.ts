@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import { apiResponse, apiError, withAdmin, withCsrf, validateBody } from '@/lib/api-utils'
 import { handleApiError } from '@/lib/errors'
 import { invalidateContentCache } from '@/lib/cache-invalidate'
+import logger from '@/lib/logger'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auditFromRequest, AuditActions } from '@/lib/audit'
@@ -148,12 +149,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     await invalidateContentCache('blog')
     return apiResponse(data)
   } catch (error) {
-    console.error('[Blog PUT] Full error:', error)
-    if (error instanceof Error) {
-      console.error('[Blog PUT] Error name:', error.name)
-      console.error('[Blog PUT] Error message:', error.message)
-      console.error('[Blog PUT] Error stack:', error.stack)
-    }
+    logger.error('Admin Update Blog Post', error, { route: 'admin/blog/[id]', method: 'PUT' })
     return handleApiError(error, 'Admin Update Blog Post')
   }
 }

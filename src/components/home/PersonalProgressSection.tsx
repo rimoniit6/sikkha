@@ -1,23 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { BookOpen, BarChart3, Bookmark, TrendingUp, Loader2 } from 'lucide-react'
-import { api } from '@/lib/api-client'
-import { useAuthUser } from '@/store/auth'
-
-interface DashboardStats {
-  completedLectures: number
-  totalLectures: number
-  avgMcqScore: number
-  savedQuestions: number
-  isPremium: boolean
-  premiumExpiry: string | null
-}
-
-interface DashboardData {
-  stats: DashboardStats
-  recentExams: unknown[]
-}
+import { BookOpen, BarChart3, Bookmark, TrendingUp } from 'lucide-react'
+import { useDashboardStats } from '@/hooks/user/use-dashboard-stats'
 
 interface StatCardProps {
   icon: React.ElementType
@@ -44,36 +28,12 @@ function StatCard({ icon: Icon, value, label, color, bgColor }: StatCardProps) {
 }
 
 export default function PersonalProgressSection() {
-  const user = useAuthUser()
-  const [stats, setStats] = useState<DashboardStats | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false)
-      return
-    }
-
-    let cancelled = false
-
-    api.get<DashboardData>('user/dashboard')
-      .then((data) => {
-        if (!cancelled && data?.stats) {
-          setStats(data.stats)
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setStats(null)
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => { cancelled = true }
-  }, [user?.id])
+  const { loading, dashboardData } = useDashboardStats()
 
   if (loading) return null
-  if (!stats) return null
+  if (!dashboardData?.stats) return null
+
+  const stats = dashboardData.stats
 
   // Only show if at least one stat has meaningful data
   const hasData = stats.completedLectures > 0 || stats.totalLectures > 0 || stats.avgMcqScore > 0 || stats.savedQuestions > 0

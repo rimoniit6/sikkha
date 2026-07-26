@@ -24,13 +24,14 @@ export async function GET(request: Request) {
     }
 
     const [
-      user,
+      premiumData,
       progress,
       totalLectures,
       examResults,
       savedQuestions,
     ] = await Promise.all([
-      db.user.findUnique({ where: { id: userId }, select: { isPremium: true, premiumExpiry: true } }),
+      // premiumExpiry is not included in verifyAuth, fetch it separately
+      db.user.findUnique({ where: { id: userId }, select: { premiumExpiry: true } }),
       db.progress.findMany({
         where: { userId },
         orderBy: { lastAccessed: 'desc' },
@@ -47,9 +48,7 @@ export async function GET(request: Request) {
       db.bookmark.count({ where: { userId } }),
     ])
 
-    if (!user) {
-      return apiError('ব্যবহারকারী খুঁজে পাওয়া যায়নি', 404)
-    }
+    // isPremium is already available from verifyAuth — no redundant user query needed
 
     const lectureProgress = progress.filter((p) => p.contentType === 'lecture')
     const completedLectures = lectureProgress.filter((p) => p.progress >= 100).length
@@ -76,8 +75,8 @@ export async function GET(request: Request) {
           totalLectures,
           avgMcqScore,
           savedQuestions,
-          isPremium: user.isPremium,
-          premiumExpiry: user.premiumExpiry ? new Date(user.premiumExpiry).toLocaleDateString('bn-BD') : null,
+          isPremium: auth.user.isPremium,
+          premiumExpiry: premiumData?.premiumExpiry ? new Date(premiumData.premiumExpiry).toLocaleDateString('bn-BD') : null,
         },
         recentExams,
       },

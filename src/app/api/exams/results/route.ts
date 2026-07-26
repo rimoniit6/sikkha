@@ -4,6 +4,7 @@ import { apiError, applyRateLimit, withCsrf } from '@/lib/api-utils'
 import { apiLimiter } from '@/lib/rate-limit'
 import { submitExam, getUserResults, ExamError } from '@/services/exam-service'
 import { handleApiError } from '@/lib/errors'
+import logger from '@/lib/logger'
 
 export const dynamic = 'force-dynamic'
 
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
     if (error instanceof ExamError) {
       return apiError(error.message, error.statusCode)
     }
-    console.error('Save Exam Result error:', error)
+    logger.error('Save Exam Result error', error, { route: 'exams/results', method: 'POST' })
     if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       return apiError('আপনি ইতিমধ্যে এই পরীক্ষাটি জমা দিয়েছেন', 409)
     }

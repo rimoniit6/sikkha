@@ -1,11 +1,11 @@
 import { db } from '@/lib/db'
-import { apiResponse, apiError, withAdmin, validateBody, withCsrf, paginatedApiResponse } from '@/lib/api-utils'
+import { apiResponse, withAdmin, validateBody, withCsrf, paginatedApiResponse } from '@/lib/api-utils'
 import { handleApiError } from '@/lib/errors'
+import logger from '@/lib/logger'
 import { invalidateContentCache } from '@/lib/cache-invalidate'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { auditFromRequest, AuditActions } from '@/lib/audit'
-import { softDelete } from '@/lib/soft-delete'
 import { sanitizeForStorage } from '@/lib/sanitize'
 import { generateUniqueSlug } from '@/lib/slug-unique'
 
@@ -148,12 +148,7 @@ export async function POST(request: Request) {
     await invalidateContentCache('blog')
     return apiResponse(data, 201)
   } catch (error) {
-    console.error('[Blog POST] Full error:', error)
-    if (error instanceof Error) {
-      console.error('[Blog POST] Error name:', error.name)
-      console.error('[Blog POST] Error message:', error.message)
-      console.error('[Blog POST] Error stack:', error.stack)
-    }
+    logger.error('Admin Create Blog Post', error, { route: 'admin/blog', method: 'POST' })
     return handleApiError(error, 'Admin Create Blog Post')
   }
 }

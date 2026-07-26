@@ -8,6 +8,8 @@ import { useRouterStore } from '@/store/router'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/hooks/use-toast'
 import { fetchCsrfToken } from '@/lib/api-client'
+import { useQueryClient } from '@tanstack/react-query'
+import { invalidateLearningCaches } from '@/lib/invalidate-learning-caches'
 
 interface BookmarkButtonProps {
   contentId: string
@@ -36,6 +38,7 @@ export default function BookmarkButton({
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked || false)
   const [loading, setLoading] = useState(false)
   const [checked, setChecked] = useState(initialBookmarked !== undefined)
+  const queryClient = useQueryClient()
 
   // Check bookmark status from API if not provided
   useEffect(() => {
@@ -78,6 +81,7 @@ export default function BookmarkButton({
         const newStatus = !isBookmarked
         setIsBookmarked(newStatus)
         onToggle?.(newStatus)
+        invalidateLearningCaches(queryClient)
         toast({
           title: newStatus ? 'বুকমার্ক যোগ হয়েছে' : 'বুকমার্ক সরানো হয়েছে',
           description: newStatus

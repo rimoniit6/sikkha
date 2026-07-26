@@ -25,6 +25,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { fetchCsrfToken } from '@/lib/api-client'
 import { downloadPdf,getFilenameFromUrl } from '@/lib/pdf-download'
 import { useAuthUser } from '@/store/auth'
+import { useQueryClient } from '@tanstack/react-query'
+import { invalidateLearningCaches } from '@/lib/invalidate-learning-caches'
 import { useRouterStore, useRouteParams } from '@/store/router'
 import {
 ArrowLeft,ArrowRight,
@@ -104,6 +106,7 @@ export default function LectureViewerPage() {
   const lastScrollY = useRef(0)
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const queryClient = useQueryClient()
   const { settings, updateSettings, contentClassName } = useReadingSettings()
   const { sessionSeconds, totalSeconds, lastOpened, formatTime, formatDate } = useReadingSession(lectureData?.id ?? null)
   const { notes: localNotes, loaded: localNotesLoaded, addNote: addLocalNote, updateNote: updateLocalNote, deleteNote: deleteLocalNote } = useLocalNotes(lectureData?.id ?? null)
@@ -168,7 +171,7 @@ export default function LectureViewerPage() {
       lastSentProgress.current = contentProgress
       try {
         const csrfToken = await fetchCsrfToken()
-        await fetch('/api/progress', {
+        const res = await fetch('/api/progress', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -178,6 +181,10 @@ export default function LectureViewerPage() {
             _csrf: csrfToken,
           }),
         })
+        // Invalidate learning caches when lecture reaches 100%
+        if (res.ok && contentProgress >= 100) {
+          invalidateLearningCaches(queryClient)
+        }
       } catch { /* ignore */ }
     }, 2000)
 
@@ -263,6 +270,8 @@ export default function LectureViewerPage() {
               title: lectureObj.title,
               _csrf: csrfToken,
             }),
+          }).then((rvRes) => {
+            if (rvRes.ok) invalidateLearningCaches(queryClient)
           }).catch((err) => {
             console.error('[LectureViewer] Failed to record recently viewed:', err)
           })
@@ -279,6 +288,8 @@ export default function LectureViewerPage() {
                 progress: 5,
                 _csrf: csrfToken,
             }),
+          }).then((pRes) => {
+            if (pRes.ok) invalidateLearningCaches(queryClient)
           }).catch((err) => {
             console.error('[LectureViewer] Failed to save progress:', err)
           })

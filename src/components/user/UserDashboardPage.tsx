@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type ReactNode, type RefObject } from 'react'
+import { useState, type ReactNode, type RefObject } from 'react'
 import {
   Clock, Crown, Package, ShoppingBag, Sparkles, Timer, CreditCard, MessageSquareText, Settings2, LayoutDashboard,
   GraduationCap, FileCheck, Heart, Target, ChevronRight
@@ -13,8 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
 import { useUserDashboard } from '@/hooks/user/use-user-dashboard'
 import { useLearningDashboard } from '@/hooks/user/use-learning-dashboard'
-import { api } from '@/lib/api-client'
-import type { RecentLecture } from '@/types/user-dashboard'
+import { useRecentLectures } from '@/hooks/user/use-recent-lectures'
 
 // Import sub-components
 import { StatCards } from './dashboard/StatCards'
@@ -135,7 +134,7 @@ export default function UserDashboardPage() {
     payments,
   } = useUserDashboard()
 
-  const [recentLectures, setRecentLectures] = useState<RecentLecture[]>([])
+  const { data: recentLectures } = useRecentLectures()
   const isDashboardLoaded = !!dashboardData
   const { data: learningData, loading: learningLoading } = useLearningDashboard({ enabled: isDashboardLoaded })
   const { data: recommendations, loading: recsLoading } = useRecommendations({ enabled: isDashboardLoaded })
@@ -143,14 +142,6 @@ export default function UserDashboardPage() {
   const { data: revisionData, loading: revisionLoading, error: revisionError, completeRevision, skipRevision } = useRevisionQueue({ enabled: isDashboardLoaded })
   useGenerateNotifications() // Generate intelligent notifications on dashboard load
   const [showLearningDashboard, setShowLearningDashboard] = useState(true)
-
-  useEffect(() => {
-    api.get<RecentLecture[]>('user/recent-lectures')
-      .then(d => setRecentLectures(Array.isArray(d) ? d : []))
-      .catch((err) => {
-        console.error('[Dashboard] Failed to fetch recent lectures:', err)
-      })
-  }, [user?.id])
 
   if (loading) {
     return (

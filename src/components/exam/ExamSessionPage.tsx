@@ -28,9 +28,11 @@ import SafeImage from '@/components/ui/safe-image'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { fetchCsrfToken } from '@/lib/api-client'
+import { invalidateLearningCaches } from '@/lib/invalidate-learning-caches'
 import { useExamStore } from '@/store/exam'
 import { useRouterStore, useRouteParams } from '@/store/router'
 import { useToast } from '@/hooks/use-toast'
+import { useQueryClient } from '@tanstack/react-query'
 import { useCallback,useEffect,useMemo,useRef,useState } from 'react'
 
 interface MCQQuestion {
@@ -218,6 +220,7 @@ export default function ExamSessionPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
   const [sessionError, setSessionError] = useState('')
+  const queryClient = useQueryClient()
 
   // Custom exam handling
   const isCustomExam = params.source === 'custom'
@@ -509,6 +512,7 @@ export default function ExamSessionPage() {
       const resultId = data.data?.resultId
       const returnedExamId = data.data?.examId || effectiveExamId
       endExam()
+      invalidateLearningCaches(queryClient)
       navigate('exam-result', {
         resultId: resultId || effectiveExamId,
         examId: returnedExamId,

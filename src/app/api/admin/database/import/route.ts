@@ -2,6 +2,7 @@ import { apiError, withCsrf, applyRateLimit, withSuperAdmin } from '@/lib/api-ut
 import { auditFromRequest } from '@/lib/audit'
 import { db } from '@/lib/db'
 import { handleApiError } from '@/lib/errors'
+import logger from '@/lib/logger'
 import { apiLimiter } from '@/lib/rate-limit'
 
 import { NextRequest,NextResponse } from 'next/server'
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('[DB Import] Error details:', error instanceof Error ? { message: error.message, stack: error.stack, name: error.name } : error)
+    logger.error('Database import error', error, { route: 'admin/database/import' })
     return handleApiError(error, 'Database import error')
   }
 }

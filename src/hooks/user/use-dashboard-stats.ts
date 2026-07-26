@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useAuthUser } from '@/store/auth'
 import { api } from '@/lib/api-client'
+import { queryKeys } from '@/lib/query-keys'
 import type { DashboardData } from '@/types/user-dashboard'
 
 interface UseDashboardStatsResult {
@@ -16,39 +17,25 @@ const FALLBACK_DATA: DashboardData = {
 }
 
 /**
- * Fetches dashboard stats (completed lectures, exam scores, etc.).
+ * Fetches dashboard stats (completed lectures, exam scores, etc.) via React Query.
+ * Uses a shared query key ['user', 'dashboard'] so that any component on any page
+ * using this hook gets the same cached data — no duplicate network requests.
  */
 export function useDashboardStats(): UseDashboardStatsResult {
   const user = useAuthUser()
-  const [loading, setLoading] = useState(true)
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
 
-  const fetchData = useCallback(async (signal?: AbortSignal) => {
-    if (!user?.id) return
-    setLoading(true)
-    try {
-      const response = await api.get<DashboardData>('user/dashboard', undefined, { signal })
-      if (!signal?.aborted) {
-        setDashboardData(response)
-      }
-    } catch {
-      if (!signal?.aborted) {
-        setDashboardData(FALLBACK_DATA)
-      }
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false)
-      }
-    }
-  }, [user?.id])
+  const { data, isLoading } = useQuery<DashboardData>({
+    queryKey: queryKeys.dashboard(),
+    queryFn: async ({ signal }) => {
+      return api.get<DashboardData>('user/dashboard', undefined, { signal })
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  })
 
-  useEffect(() => {
-    const controller = new AbortController()
-    abortRef.current = controller
-    fetchData(controller.signal)
-    return () => { controller.abort() }
-  }, [fetchData])
-
-  return { loading, dashboardData }
+  return {
+    loading: isLoading,
+    dashboardData: data ?? FALLBACK_DATA,
+  }
 }

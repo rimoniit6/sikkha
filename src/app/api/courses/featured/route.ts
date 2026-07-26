@@ -1,13 +1,28 @@
 import { db } from '@/lib/db'
 import { NextResponse } from 'next/server'
 import { handleApiError } from '@/lib/errors'
+import { verifyAuth } from '@/lib/auth'
+import { getClassLevelForUserId } from '@/lib/class-filter'
 import {
   getFeaturedRegistration,
   batchResolveFeaturedContent,
 } from '@/lib/featured-content-registry'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // Personalize featured content for authenticated users
+    let userClassLevel: string | null = null
+    try {
+      const auth = await verifyAuth(request)
+      if (auth?.user?.id) {
+        userClassLevel = auth.user.classLevel && auth.user.learningMode === 'CLASS_BASED'
+          ? auth.user.classLevel
+          : await getClassLevelForUserId(auth.user.id)
+      }
+    } catch {
+      // Not authenticated — use global featured content
+    }
+
     const featuredItems = await db.featuredContent.findMany({
       where: { section: 'homepage', isActive: true },
       orderBy: { order: 'asc' },
@@ -72,6 +87,22 @@ export async function GET() {
         isPremium: reg.isPremium(entry),
         extra: reg.getSearchExtra?.(entry) || {},
       })
+    }
+
+    // Personalize: if user has a class level, prioritize same-class content
+    // classSlug and classLevel are already loaded by batchResolveFeaturedContent
+    // via CHAPTER_INCLUDE → getSearchExtra — no separate DB queries needed.
+    if (userClassLevel) {
+      const itemsWithPriority = items
+        .map((item) => ({
+          ...item,
+          _classPriority:
+            item.extra?.classSlug === userClassLevel || item.extra?.classLevel === userClassLevel
+              ? 0
+              : 1,
+        }))
+        .sort((a, b) => a._classPriority - b._classPriority)
+      return NextResponse.json({ success: true, data: { items: itemsWithPriority } })
     }
 
     return NextResponse.json({ success: true, data: { items } })

@@ -249,12 +249,40 @@ export async function POST(request: Request) {
         include: { items: true },
       })
 
+      // Batch-fetch course-granted content IDs once, outside the loop
+      const { getCourseGrantedContentIds } = await import('@/lib/course-access-resolver')
+      const courseGrantedIds = await getCourseGrantedContentIds(userId)
+
       for (const bundle of bundles) {
+        // First check: was the bundle itself purchased via a direct bundle-type payment?
+        const directBundlePurchase = await db.payment.findFirst({
+          where: {
+            userId,
+            contentType: 'bundle',
+            contentId: bundle.id,
+            status: 'APPROVED',
+            isActive: true,
+          },
+          select: { id: true },
+        })
+
+        if (directBundlePurchase) {
+          bundleOwnershipMap.set(bundle.id, true)
+          continue
+        }
+
+        // Second check: bundle is granted via course access
+        if (courseGrantedIds.has(bundle.id)) {
+          bundleOwnershipMap.set(bundle.id, true)
+          continue
+        }
+
         if (bundle.items.length === 0) {
           bundleOwnershipMap.set(bundle.id, false)
           continue
         }
 
+        // Third check: all individual items inside the bundle are purchased separately
         const itemPayments = await db.payment.findMany({
           where: {
             userId,
@@ -313,12 +341,12 @@ export async function POST(request: Request) {
         }
       }
 
-      // Package items: check subscription
+      // Package items: check subscription OR direct payment
       if (item.contentType === 'package') {
         return {
           contentType: item.contentType,
           contentId: item.contentId,
-          purchased: packageAccessMap.get(item.contentId) || false,
+          purchased: packageAccessMap.get(item.contentId) || purchasedContentIds.has(item.contentId),
           pendingPayment: pendingContentIds.has(item.contentId),
         }
       }

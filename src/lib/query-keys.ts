@@ -115,7 +115,6 @@ export const queryKeys = {
     unreadCount: () => ['student', 'notifications', 'unread'] as const,
   },
   student: {
-    dashboard: () => ['student', 'dashboard'] as const,
     learningDashboard: () => ['student', 'learning-dashboard'] as const,
     recommendations: () => ['student', 'recommendations'] as const,
     weaknesses: () => ['student', 'weaknesses'] as const,
@@ -125,8 +124,11 @@ export const queryKeys = {
     achievements: () => ['student', 'achievements'] as const,
     achievement: (id: string) => ['student', 'achievements', id] as const,
     insights: (params?: Record<string, unknown>) => ['student', 'insights', params] as const,
-    recentLectures: () => ['student', 'recent-lectures'] as const,
     payments: () => ['student', 'payments'] as const,
     subscriptions: () => ['student', 'subscriptions'] as const,
   },
+  dashboard: () => ['user', 'dashboard'] as const,
+  recentLectures: () => ['user', 'recent-lectures'] as const,
+  recentlyViewed: () => ['user', 'recently-viewed'] as const,
+  personalizedContinueLearning: () => ['user', 'personalized-continue-learning'] as const,
 }

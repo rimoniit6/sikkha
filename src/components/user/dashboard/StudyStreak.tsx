@@ -59,7 +59,7 @@ function StudyStreakComponent({ streak }: StudyStreakProps) {
             </div>
             <div>
               <h3 className="font-bold text-base sm:text-lg flex items-center gap-2">
-                স্টudy Streak
+                Study Streak
                 {streak.currentStreak >= 7 && (
                   <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-full">
                     হট Streak!

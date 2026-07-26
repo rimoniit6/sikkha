@@ -122,7 +122,13 @@ export const FEATURED_CONTENT_REGISTRY: Record<string, FeaturedContentRegistrati
       const ch = e.chapter as Record<string, unknown> | undefined
       const subj = ch?.subject as Record<string, unknown> | undefined
       const cls = subj?.class as Record<string, unknown> | undefined
-      return ch?.id ? { chapterId: ch.id as string, chapterSlug: ch.slug as string, subjectId: subj?.id as string, subjectSlug: subj?.slug as string, classSlug: cls?.slug as string } : undefined
+      return {
+        chapterId: ch?.id as string,
+        chapterSlug: ch?.slug as string,
+        subjectId: subj?.id as string,
+        subjectSlug: subj?.slug as string,
+        classSlug: cls?.slug as string,
+      }
     },
   },
 

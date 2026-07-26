@@ -12,16 +12,19 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const from = searchParams.get('from') || new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
     const to = searchParams.get('to') || new Date().toISOString().split('T')[0]
-    const prevFrom = searchParams.get('prevFrom') || new Date(Date.now() - 60 * 86400000).toISOString().split('T')[0]
-    const prevTo = searchParams.get('prevTo') || new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
 
     const fromDate = new Date(from)
     const toDate = new Date(to + 'T23:59:59.999Z')
 
-    const [users, referralEvents, campaignEvents] = await Promise.all([
-      db.user.findMany({
+    // SAFE: Count users with/without password hash rather than loading
+    // password hashes into memory. Password presence distinguishes
+    // email signups (has password) from social/organic signups (no password).
+    const [emailSignups, totalUsers, referralEvents, campaignEvents] = await Promise.all([
+      db.user.count({
+        where: { createdAt: { gte: fromDate, lte: toDate }, NOT: { password: null } },
+      }),
+      db.user.count({
         where: { createdAt: { gte: fromDate, lte: toDate } },
-        select: { password: true },
       }),
       db.analyticsEvent.count({
         where: {
@@ -43,28 +46,18 @@ export async function GET(request: Request) {
       }),
     ])
 
-    let emailCount = 0
-    let organicCount = 0
-
-    users.forEach((u) => {
-      if (u.password) {
-        emailCount++
-      } else {
-        organicCount++
-      }
-    })
-
-    const total = users.length || 1
-    const toPercent = (v: number) => Math.round((v / total) * 100 * 100) / 100
+    const organicCount = totalUsers - emailSignups
+    const denominator = totalUsers || 1
+    const toPercent = (v: number) => Math.round((v / denominator) * 100 * 100) / 100
 
     const signupSource = [
-      { source: 'email', count: emailCount, percentage: toPercent(emailCount) },
+      { source: 'email', count: emailSignups, percentage: toPercent(emailSignups) },
       { source: 'organic', count: organicCount, percentage: toPercent(organicCount) },
     ]
 
     return apiResponse({
       signupSource,
-      emailSignup: emailCount,
+      emailSignup: emailSignups,
       referral: referralEvents,
       organic: organicCount,
       campaign: campaignEvents,

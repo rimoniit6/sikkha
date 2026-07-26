@@ -614,7 +614,7 @@ export async function generateInsights(userId: string, period: InsightsPeriod = 
       id: 'current-streak',
       category: 'calendar',
       title: 'বর্তমান স্ট্রিক',
-      message: `আপনার বর্তমান স্টudy streak ${streak} দিন!`,
+      message: `আপনার বর্তমান Study Streak ${streak} দিন!`,
       impact: streak >= 7 ? 'achievement' : 'positive',
       value: streak,
       unit: 'দিন',

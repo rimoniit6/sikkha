@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { applyRateLimit, withSuperAdmin } from '@/lib/api-utils'
 import { apiLimiter } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/errors'
+import logger from '@/lib/logger'
 import { auditFromRequest } from '@/lib/audit'
 
 export async function GET(request: Request) {
@@ -124,7 +125,7 @@ export async function GET(request: Request) {
       },
     })
   } catch (error) {
-    console.error('[DB Export] Error details:', error instanceof Error ? { message: error.message, stack: error.stack, name: error.name } : error)
+    logger.error('Database export error', error, { route: 'admin/database/export' })
     return handleApiError(error, 'Database export error')
   }
 }

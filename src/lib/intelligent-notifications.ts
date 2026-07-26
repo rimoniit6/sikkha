@@ -485,8 +485,7 @@ async function makeStreakAtRisk(userId: string): Promise<GeneratedNotification |
 
   return {
     category: 'streak-risk',
-    title: 'স্ট্রিক বিপদে',
-    message: 'আপনার স্টudy streak আজ শেষ হয়ে যেতে পারে! একটু সময় দিয়ে একটি লেকচার দেখুন।',
+    title: 'স্ট্রিক বিপদে',      message: 'আপনার Study Streak আজ শেষ হয়ে যেতে পারে! একটু সময় দিয়ে একটি লেকচার দেখুন।',
     type: 'WARNING',
     priority: 'critical',
     link: '/user/dashboard',
@@ -634,7 +633,7 @@ async function makeAchievement(userId: string): Promise<GeneratedNotification | 
     return {
       category: 'achievement-streak',
       title: 'অভিনন্দন!',
-      message: `আপনি ${toBengaliNumerals(streak)} দিনের একটি স্টudy streak অর্জন করেছেন! দারুণ অধ্যবসায়!`,
+      message: `আপনি ${toBengaliNumerals(streak)} দিনের একটি Study Streak অর্জন করেছেন! দারুণ অধ্যবসায়!`,
       type: 'SUCCESS',
       priority: 'low',
       link: '/user/dashboard',
@@ -1076,8 +1075,7 @@ async function makeNewLongestStreak(userId: string): Promise<GeneratedNotificati
 
   return {
     category: 'longest-streak',
-    title: 'নতুন রেকর্ড!',
-    message: `অভিনন্দন! আপনি ${toBengaliNumerals(currentStreak)} দিনের একটি নতুন স্টudy streak রেকর্ড তৈরি করেছেন!`,
+    title: 'নতুন রেকর্ড!',      message: `অভিনন্দন! আপনি ${toBengaliNumerals(currentStreak)} দিনের একটি নতুন Study Streak রেকর্ড তৈরি করেছেন!`,
     type: 'SUCCESS',
     priority: 'low',
     link: '/user/dashboard',

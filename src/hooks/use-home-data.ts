@@ -108,6 +108,8 @@ export function useFeaturedCourses() {
       const json = await fetchJSON<{ success?: boolean; data?: { items?: FeaturedItem[] } }>('/api/courses/featured')
       return json.data?.items || []
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     select: (data) => data,
   })
 }

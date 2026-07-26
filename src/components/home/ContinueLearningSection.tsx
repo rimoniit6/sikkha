@@ -1,26 +1,17 @@
 'use client'
 
 import { useRef } from 'react'
-import { BookOpen, ChevronRight, Clock, Lock, ArrowRight, Play } from 'lucide-react'
+import { BookOpen, ChevronRight, Clock, Lock } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useFeaturedCourses, type FeaturedItem } from '@/hooks/use-home-data'
+import { usePersonalizedContinueLearning } from '@/hooks/user/use-personalized-continue-learning'
 import { useRouterStore } from '@/store/router'
 import { getFeaturedRegistration } from '@/lib/featured-content-registry'
 import Image from 'next/image'
 
-const CTA_LABELS: Record<string, string> = {
-  lecture: 'দেখুন',
-  mcq: 'অনুশীলন',
-  cq: 'অনুশীলন',
-  blog: 'পড়ুন',
-  course: 'শুরু করুন',
-  exam: 'পরীক্ষা দিন',
-  boardQuestion: 'অনুশীলন',
-  knowledgeQuestion: 'অনুশীলন',
-}
 
 function getTypeLabel(type: string): string {
   const reg = getFeaturedRegistration(type)
@@ -33,24 +24,58 @@ function getTypeColor(type: string): string {
 }
 
 function navigateToItem(item: FeaturedItem, navigate: ReturnType<typeof useRouterStore.getState>['navigate']) {
-  const navigateToUrl = (url: string) => { if (typeof window !== 'undefined') window.location.href = url }
+  const navigateToUrl = (url: string) => {
+    if (typeof window !== 'undefined') window.location.href = url
+  }
 
   switch (item.contentType) {
     case 'lecture': {
-      const lectureId = item.extra.lectureId as string | undefined
+      // item.id IS the lecture ID from personalized API's lectureToItem
+      // extra.lectureId doesn't exist in getSearchExtra — item.id is the source of truth
+      const lectureId = item.id
       const chapterId = item.extra.chapterId as string | undefined
       const subjectId = item.extra.subjectId as string | undefined
       const classSlug = item.extra.classSlug as string | undefined
-      if (lectureId && chapterId && subjectId && classSlug)
-        navigate('lecture-viewer', { lectureId, chapterId, subjectId, classSlug })
+      const subjectSlug = item.extra.subjectSlug as string | undefined
+      const chapterSlug = item.extra.chapterSlug as string | undefined
+      if (lectureId) {
+        // Best: navigate with full context
+        navigate('lecture-viewer', {
+          lectureId,
+          chapterId: chapterId || '',
+          subjectId: subjectId || '',
+          classSlug: classSlug || '',
+        })
+      } else if (chapterId && classSlug && subjectSlug && chapterSlug) {
+        navigate('chapter-detail', { chapterId, subjectId: subjectId || '', classSlug, subjectSlug, chapterSlug })
+      } else if (subjectId && classSlug && subjectSlug) {
+        navigate('subject-detail', { subjectId, classSlug, subjectSlug })
+      }
       break
     }
     case 'mcq': {
-      const chapterId = item.extra.chapterId as string | undefined
-      const subjectId = item.extra.subjectId as string | undefined
-      const classSlug = item.extra.classSlug as string | undefined
-      if (chapterId && subjectId && classSlug)
-        navigate('chapter-detail', { chapterId, subjectId, classSlug, subjectSlug: item.extra.subjectSlug as string || '', chapterSlug: item.extra.chapterSlug as string || '' })
+      const mcqChapterId = item.extra.chapterId as string | undefined
+      const mcqSubjectId = item.extra.subjectId as string | undefined
+      const mcqClassSlug = item.extra.classSlug as string | undefined
+      const mcqSubjectSlug = item.extra.subjectSlug as string | undefined
+      const mcqChapterSlug = item.extra.chapterSlug as string | undefined
+      if (mcqChapterId && mcqClassSlug && mcqSubjectSlug && mcqChapterSlug) {
+        navigate('chapter-detail', { chapterId: mcqChapterId, subjectId: mcqSubjectId || '', classSlug: mcqClassSlug, subjectSlug: mcqSubjectSlug, chapterSlug: mcqChapterSlug })
+      } else if (mcqSubjectId && mcqClassSlug && mcqSubjectSlug) {
+        navigate('subject-detail', { subjectId: mcqSubjectId, classSlug: mcqClassSlug, subjectSlug: mcqSubjectSlug })
+      }
+      break
+    }
+    case 'cq': {
+      const cqChapterId = item.extra.chapterId as string | undefined
+      const cqSubjectId = item.extra.subjectId as string | undefined
+      const cqClassSlug = item.extra.classSlug as string | undefined
+      const cqSubjectSlug = item.extra.subjectSlug as string | undefined
+      if (cqChapterId && cqSubjectId) {
+        navigate('cq-list', { chapterId: cqChapterId, subjectId: cqSubjectId, classSlug: cqClassSlug || '' })
+      } else if (cqSubjectId && cqClassSlug && cqSubjectSlug) {
+        navigate('subject-detail', { subjectId: cqSubjectId, classSlug: cqClassSlug, subjectSlug: cqSubjectSlug })
+      }
       break
     }
     case 'blog': {
@@ -60,16 +85,40 @@ function navigateToItem(item: FeaturedItem, navigate: ReturnType<typeof useRoute
       break
     }
     case 'course': {
-      const slug = item.extra.slug as string | undefined
-      if (slug) navigate('course-detail', { courseSlug: slug })
+      const courseSlug = item.extra.slug as string | undefined
+      if (courseSlug) navigate('course-detail', { courseSlug })
       break
     }
-    case 'boardQuestion':
-      navigate('board-questions')
+    case 'notice':
+      navigate('notices')
       break
     case 'exam':
       navigate('exam-center')
       break
+    case 'suggestion':
+      navigate('suggestion-detail', { suggestionId: item.id })
+      break
+    case 'bundle':
+    case 'package':
+      navigate('premium')
+      break
+    case 'boardQuestion':
+      navigate('board-questions')
+      break
+    case 'knowledgeQuestion':
+      navigate('short-questions')
+      break
+    case 'mcqExamPackage':
+      navigate('mcq-exam-package-list')
+      break
+    case 'cqExamPackage':
+      navigate('cq-exam-package-list')
+      break
+    case 'customLink': {
+      const url = item.extra.url as string | undefined
+      if (url) window.open(url, '_blank', 'noopener,noreferrer')
+      break
+    }
     default:
       break
   }
@@ -91,8 +140,14 @@ function ContinueLearningSkeleton() {
 
 export default function ContinueLearningSection() {
   const navigate = useRouterStore((s) => s.navigate)
-  const { data: items = [], isLoading } = useFeaturedCourses()
+  const { items: personalizedItems, isLoading: personalizedLoading } = usePersonalizedContinueLearning()
+  const { data: featuredItems = [], isLoading: featuredLoading } = useFeaturedCourses()
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Fallback chain: personalized → featured → empty
+  const hasPersonalized = personalizedItems.length > 0
+  const items = hasPersonalized ? personalizedItems : featuredItems
+  const isLoading = hasPersonalized ? personalizedLoading : featuredLoading
 
   const visibleItems = items.slice(0, 8)
 

@@ -31,7 +31,7 @@ export function useLearningPreference() {
 }
 
 function invalidateContentCache(queryClient: ReturnType<typeof useQueryClient>) {
-  const prefixes = ['subjects', 'chapters', 'lectures', 'mcq', 'cq', 'courses', 'board-questions', 'suggestions', 'search', 'packages', 'bundles', 'mcq-exam-packages', 'cq-exam-packages']
+  const prefixes = ['subjects', 'chapters', 'lectures', 'mcq', 'cq', 'courses', 'board-questions', 'suggestions', 'search', 'packages', 'bundles', 'mcq-exam-packages', 'cq-exam-packages', 'user']
   queryClient.invalidateQueries({ predicate: (query) => {
     const key = query.queryKey[0]
     return typeof key === 'string' && prefixes.includes(key)

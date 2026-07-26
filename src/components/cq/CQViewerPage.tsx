@@ -13,6 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { fetchCsrfToken } from '@/lib/api-client'
 import { getMessages } from '@/lib/messages'
 import { useAuthUser } from '@/store/auth'
+import { useQueryClient } from '@tanstack/react-query'
+import { invalidateLearningCaches } from '@/lib/invalidate-learning-caches'
 import { useRouterStore, useRouteParams } from '@/store/router'
 import { AnimatePresence,motion } from 'framer-motion'
 import { ArrowLeft,BookOpen,CheckCircle2,Eye,EyeOff,FileDown,Printer } from 'lucide-react'
@@ -56,6 +58,7 @@ export default function CQViewerPage() {
   const paramYear = params.year || ''
   const paramBoard = params.boardName || ''
   const user = useAuthUser()
+  const queryClient = useQueryClient()
   const msg = getMessages()
   const [cqData, setCqData] = useState<CQData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -118,6 +121,8 @@ export default function CQViewerPage() {
               title: `${data.data.chapterName} - সৃজনশীল প্রশ্ন`,
               _csrf: csrfToken,
             }),
+          }).then((rvRes) => {
+            if (rvRes.ok) invalidateLearningCaches(queryClient)
           }).catch((err) => {
             console.error('[CQViewer] Failed to record recently viewed:', err)
           })
@@ -132,6 +137,8 @@ export default function CQViewerPage() {
               progress: 5,
               _csrf: csrfToken,
             }),
+          }).then((pRes) => {
+            if (pRes.ok) invalidateLearningCaches(queryClient)
           }).catch((err) => {
             console.error('[CQViewer] Failed to update progress:', err)
           })
