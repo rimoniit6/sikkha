@@ -554,10 +554,12 @@ export default function CQListPage() {
       {/* Stats Summary */}
       <div className="max-w-5xl mx-auto px-4 py-4">
         <div className="flex flex-wrap items-center gap-3 mb-4">
-          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 gap-1 px-3 py-1 text-sm">
-            <BookOpen className="size-3.5" />
-            ফ্রি {toBengaliNum(freeCqs.length)}টি
-          </Badge>
+          {freeCqs.length > 0 && (
+            <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 gap-1 px-3 py-1 text-sm">
+              <BookOpen className="size-3.5" />
+              ফ্রি {toBengaliNum(freeCqs.length)}টি
+            </Badge>
+          )}
           {purchasedCqs.length > 0 && (
             <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 gap-1 px-3 py-1 text-sm">
               <CheckCircle2 className="size-3.5" />

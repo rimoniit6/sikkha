@@ -327,6 +327,18 @@ export default function LectureViewerPage() {
     checkPayment()
   }, [lectureData?.isPremium, lectureData?.id, user?.id])
 
+  // Collect images from content blocks for lightbox
+  useEffect(() => {
+    if (!lectureData?.content) return
+    try {
+      const blocks = deserializeBlocks(lectureData.content)
+      const imgs = blocks
+        .filter((b) => b.type === 'image' && (b as any).url)
+        .map((b: any) => ({ src: b.url, alt: b.caption || lectureData.title }))
+      if (imgs.length > 0) setLightboxImages(imgs)
+    } catch { /* ignore */ }
+  }, [lectureData?.content, lectureData?.title])
+
   // Determine access: premium users always have access, or if content is not premium
   const isPremiumUser = user?.isPremium && !!user?.premiumExpiry && new Date(user.premiumExpiry) > new Date()
   const isPremiumContent = lectureData?.isPremium ?? false
@@ -596,18 +608,6 @@ export default function LectureViewerPage() {
       )}
     </>
   )
-
-  // Collect images from content blocks for lightbox
-  useEffect(() => {
-    if (!lectureData?.content) return
-    try {
-      const blocks = deserializeBlocks(lectureData.content)
-      const imgs = blocks
-        .filter((b) => b.type === 'image' && (b as any).url)
-        .map((b: any) => ({ src: b.url, alt: b.caption || lectureData.title }))
-      if (imgs.length > 0) setLightboxImages(imgs)
-    } catch { /* ignore */ }
-  }, [lectureData?.content, lectureData?.title])
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-200">

@@ -229,11 +229,13 @@ export default function SubjectHubPage() {
         </div>
       </div>
 
-      {/* Stats bar */}
+      {/* Stats bar — only show stats with actual content */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 mt-6">
-        {STATS.map((stat, i) => (
-          <StatCard key={stat.key} stat={stat} count={data.contentCounts[stat.key] || 0} index={i} />
-        ))}
+        {STATS
+          .filter((stat) => (data.contentCounts[stat.key] || 0) > 0)
+          .map((stat, i) => (
+            <StatCard key={stat.key} stat={stat} count={data.contentCounts[stat.key] || 0} index={i} />
+          ))}
       </div>
 
       {/* Search */}

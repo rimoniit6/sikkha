@@ -112,6 +112,8 @@
   "devDependencies": {
     "@next/bundle-analyzer": "^16.2.9",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^7.0.0",
+    "@testing-library/react": "^16.3.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "26.0.0",
     "@types/react": "^19",

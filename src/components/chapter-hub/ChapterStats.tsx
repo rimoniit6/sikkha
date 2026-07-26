@@ -43,9 +43,14 @@ export function ChapterStats({ chapter }: { chapter: ChapterData }) {
     { icon: BookOpenCheck, label: 'Exams', count: chapter.contentCounts['exam'] || 0, gradient: 'from-teal-500 to-emerald-500' },
   ]
 
+  // Only show stats with actual content — hide cards with zero count
+  const visibleStats = stats.filter((s) => s.count > 0)
+
+  if (visibleStats.length === 0) return null
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3 mt-6">
-      {stats.map((s, i) => (
+      {visibleStats.map((s, i) => (
         <StatCard key={s.label} {...s} delay={0.05 * i} />
       ))}
     </div>

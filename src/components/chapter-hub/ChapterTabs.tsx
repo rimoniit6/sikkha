@@ -27,10 +27,17 @@ interface ChapterTabsProps {
 }
 
 export function ChapterTabs({ chapter, activeTab, onTabChange }: ChapterTabsProps) {
+  // Filter out tabs with zero count, but always show 'all' tab
+  const visibleTabs = TABS.filter((tab) => {
+    if (!tab.countKey) return true // 'all' tab always visible
+    const count = chapter.contentCounts[tab.countKey]
+    return count && count > 0
+  })
+
   return (
     <Tabs value={activeTab} onValueChange={onTabChange}>
       <TabsList className="w-full justify-start overflow-x-auto scrollbar-none gap-1 bg-transparent p-0 h-auto">
-        {TABS.map((tab) => {
+        {visibleTabs.map((tab) => {
           const count = tab.countKey ? chapter.contentCounts[tab.countKey] : undefined
           return (
             <TabsTrigger
