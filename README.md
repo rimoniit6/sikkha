@@ -5,7 +5,7 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
 [![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma)](https://www.prisma.io/)
-[![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite)](https://www.sqlite.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql)](https://www.postgresql.org/)
 [![License](https://img.shields.io/badge/License-ISC-blue.svg)](LICENSE)
 
 > **Complete technical handbook for developers and AI agents working on this project.**
@@ -80,12 +80,12 @@
 └──────────────────────┬──────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────┐
-│              NEXT.JS API ROUTES (211 endpoints)          │
+│              NEXT.JS API ROUTES (223 endpoints)          │
 │  Auth Guards → Validation → Business Logic → Response    │
 └──────────────────────┬──────────────────────────────────┘
                        │
 ┌──────────────────────▼──────────────────────────────────┐
-│              PRISMA ORM → SQLite (LibSQL adapter)        │
+│              PRISMA ORM → PostgreSQL                     │
 │  Soft Delete Middleware → HTML Sanitization              │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -105,9 +105,16 @@
 | Course System | `Course → CourseLesson → LessonProgress` | Structured learning with assignments |
 | Payment System | `Payment + UserSubscription` | Manual payment with admin approval |
 | Bundle System | `ContentBundle → BundleItem` | Curated content collections |
+| Blog System | `BlogPost → BlogTag → BlogCategory → BlogSeries` | Content blog with tags, categories, series |
+| Workflow System | `WorkflowItem → WorkflowTemplate` | Admin workflow automation |
+| Trash Management | `TrashItem` | Soft-deleted content recovery |
+| Suggestion System | `Suggestion` | Content suggestions with editor views |
+| Achievement System | `Achievement → UserAchievement` | Gamification with progress tracking |
+| Revision System | `RevisionQueue → SpacedRepetitionCard` | Spaced repetition for learning |
 | CMS | `Banner, Notice, FAQ, Testimonial, Navigation` | Content management |
 | Analytics | `AnalyticsEvent + AnalyticsSession` | Usage tracking and reporting |
 | Audit | `AuditLog` | Admin action history with before/after state |
+| Plans | `SubscriptionPlan` | Subscription plan management |
 
 ---
 
@@ -127,8 +134,8 @@
 | Technology | Version | Purpose |
 |-----------|---------|---------|
 | Prisma | 7.8 | ORM with schema-first approach |
-| SQLite | — | Primary database (via LibSQL adapter) |
-| LibSQL | 0.17 | SQLite-compatible database driver |
+| PostgreSQL | — | Primary database |
+| pg | 8.22 | PostgreSQL driver |
 
 ### State Management
 
@@ -197,11 +204,13 @@ src/app/
   page.tsx              ← Home page
   premium/page.tsx      ← Premium packages page
   payment/page.tsx      ← Payment form page
-  api/                  ← 211 REST API route files
-    admin/              ← Admin APIs (107 files across 53 sub-directories)
+  api/                  ← 223 REST API route files
+    admin/              ← Admin APIs (107+ files across 53+ sub-directories)
     payment/            ← Payment processing APIs
     user/               ← User profile/dashboard APIs
     auth/               ← Authentication APIs
+    blog/               ← Blog system APIs
+    courses/            ← Course system APIs
     ...
 ```
 
@@ -211,7 +220,17 @@ Organized by domain. Each sub-directory contains page-level and reusable compone
 
 ```
 src/components/
-  admin/          ← Admin panel pages (30+ components)
+  admin/          ← Admin panel pages (90+ components)
+    blog/         ← Blog management
+    workflow/     ← Workflow automation
+    bulk-import/  ← Bulk content import
+    bundles/      ← Bundle management
+    cq/           ← Creative question management
+    hierarchy/    ← Class/subject/chapter management
+    lectures/     ← Lecture management
+    mcq/          ← MCQ management
+    settings/     ← Site settings tabs
+    suggestions/  ← Suggestion management
   auth/           ← Login, register forms
   classes/        ← Class/subject/chapter browsing
   cq/             ← Creative question components
@@ -255,7 +274,7 @@ src/lib/
 
 ### `src/hooks/` — Custom React Hooks
 
-40+ custom hooks for data fetching, UI state, and business logic.
+80+ custom hooks for data fetching, UI state, and business logic.
 
 ### `src/providers/` — React Context Providers
 
@@ -278,6 +297,8 @@ src/store/
   analytics.ts      ← Admin analytics state
   board-filters.ts  ← Board question filter state
   chapter-filters.ts ← Chapter filter state
+  focus-mode.ts     ← Focus/distraction-free mode state
+  navigation-loader.ts ← Navigation loading state
 ```
 
 ### `src/services/` — Business Logic
@@ -304,7 +325,7 @@ src/features/
 
 ```
 prisma/
-  schema.prisma        ← 2000+ line schema (45+ models)
+  schema.prisma        ← 2100+ line schema (50+ models)
   seed.ts              ← Database seeding
   seed-content.ts      ← Content data seeding
   seed-data/           ← Seed data files (00-22)
@@ -384,7 +405,7 @@ AppError (base)
 
 ## 5. Database
 
-SQLite via Prisma 7 ORM with LibSQL adapter. Schema spans 2000+ lines across 45+ models.
+PostgreSQL via Prisma 7 ORM. Schema spans 2100+ lines across 50+ models.
 
 ### Key Models
 
@@ -445,6 +466,38 @@ SQLite via Prisma 7 ORM with LibSQL adapter. Schema spans 2000+ lines across 45+
 | `SiteSetting` | Key-value site configuration |
 | `Navigation` | Menu items (header/footer) |
 
+#### Blog System
+| Model | Purpose |
+|-------|---------|
+| `BlogPost` | Blog articles with rich content |
+| `BlogTag` | Blog post tags |
+| `BlogCategory` | Blog post categories |
+| `BlogSeries` | Blog post series/collections |
+| `BlogRelatedPost` | Related post mappings |
+
+#### Workflow & Trash
+| Model | Purpose |
+|-------|---------|
+| `WorkflowItem` | Admin workflow automation items |
+| `WorkflowTemplate` | Reusable workflow templates |
+| `TrashItem` | Soft-deleted content for recovery |
+
+#### Gamification & Learning
+| Model | Purpose |
+|-------|---------|
+| `Achievement` | Achievement definitions |
+| `UserAchievement` | User achievement progress |
+| `RevisionQueue` | Spaced repetition revision queue |
+| `SpacedRepetitionCard` | Flashcard-style spaced repetition |
+| `Certificate` | Course completion certificates |
+
+#### Subscription Plans
+| Model | Purpose |
+|-------|---------|
+| `SubscriptionPlan` | Subscription plan management |
+| `ContactMessage` | User contact form messages |
+| `Testimonial` | User testimonials |
+
 ### Database Features
 
 - **Soft Delete**: `deletedAt`, `deletedBy`, `deleteReason` fields on content models. Prisma middleware auto-filters deleted records.
@@ -452,6 +505,8 @@ SQLite via Prisma 7 ORM with LibSQL adapter. Schema spans 2000+ lines across 45+
 - **Transaction Retry**: `safeTransaction()` retries on P2034 (transaction conflict) with configurable max retries.
 - **Audit Logging**: `AuditLog` captures before/after state for all admin mutations.
 - **Payment Constraints**: Composite unique constraints prevent duplicate payments and subscriptions.
+- **Full-Text Search**: PostgreSQL full-text search for content queries.
+- **JSON Fields**: PostgreSQL JSON/JSONB for flexible metadata storage.
 
 ---
 
@@ -518,12 +573,20 @@ Premium content is NOT determined by `user.isPremium` flag. Access is granted th
 | MCQ Exam Packages | `admin/mcq-exam-packages` | Create sets, add questions, bulk upload |
 | CQ Exam Packages | `admin/cq-exam-packages` | Create sets, add questions, grading |
 | Course Management | `admin/courses` | Create courses, lessons, assignments |
+| Blog Management | `admin/blog` | Create/edit blog posts, tags, categories |
+| Workflow Automation | `admin/workflow` | Automated content workflows |
+| Trash Management | `admin/trash` | Recover soft-deleted content |
+| Suggestion System | `admin/suggestions` | Content suggestion editor |
+| Teacher Moderators | `admin/teacher-moderators` | Moderator role management |
+| Featured Content | `admin/featured` | Featured content curation |
+| Content Purchases | `admin/content-purchases` | Purchase tracking |
+| Subscription Plans | `admin/plans` | Subscription plan management |
 | CMS | `admin/banners`, `admin/notices`, `admin/faqs` | Content management |
 | Analytics | `admin/analytics/*` | Revenue, students, retention, conversion |
 | Database | `admin/database` | Export, import, reset |
 | Audit Logs | `admin/audit-logs` | View admin action history |
 | Version History | `admin/version-history` | Content version tracking and rollback |
-| Settings | `admin/settings` | Site configuration |
+| Settings | `admin/settings` | Site configuration (General, Security, Payment, etc.) |
 
 ### Auth Pattern
 
@@ -557,9 +620,14 @@ if (auth instanceof NextResponse) return auth
 | Payment | `/payment` | Payment form |
 | Search | `/search` | Global content search |
 | Dashboard | `/user-dashboard` | User profile and stats |
+| Learning Dashboard | `/learning-dashboard` | Learning analytics and insights |
+| Learning Calendar | `/learning-calendar` | Study schedule and calendar |
 | Notes | `/notes` | Personal notes |
 | Bookmarks | `/bookmarks` | Saved content |
 | Certificates | `/certificates` | Course certificates |
+| Achievements | `/achievements` | Gamification achievements |
+| Revision | `/revision` | Spaced repetition revision |
+| Blog | `/blog` | Educational blog articles |
 
 ### Learning Preference System
 
@@ -1165,7 +1233,7 @@ describe('createPaymentSchema', () => {
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `DATABASE_URL` | Yes | SQLite path (`file:./db/custom.db`) |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `JWT_SECRET` | Yes | JWT signing secret (32+ chars) |
 | `CSRF_SECRET` | Yes | CSRF token signing secret (32+ chars) |
 | `SUPER_ADMIN_EMAIL` | Yes | Default super admin email |
@@ -1213,7 +1281,7 @@ npm run db:reset     # Reset and re-seed
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| `PrismaClientInitializationError` | Missing `DATABASE_URL` | Set `DATABASE_URL=file:./db/custom.db` in `.env` |
+| `PrismaClientInitializationError` | Missing `DATABASE_URL` | Set `DATABASE_URL` to PostgreSQL connection string in `.env` |
 | `CSRF_INVALID` on mutations | CSRF token expired/missing | Refresh page or call `/api/csrf-token` |
 | `UNAUTHORIZED` on admin routes | Not logged in as admin | Login with admin account |
 | Blank page after login | Zustand store not hydrated | Clear localStorage `edu-auth` key |
@@ -1234,11 +1302,11 @@ npm run db:reset     # Reset and re-seed
 
 ### Medium Term (1-2 months)
 
-- [ ] Migrate from SQLite to PostgreSQL for production scaling
+- [ ] ~~Migrate from SQLite to PostgreSQL for production scaling~~ ✅ Done
 - [ ] Add automated payment gateway integration (bKash/Nagad API)
 - [ ] Implement real-time notifications via WebSocket
 - [ ] Add content versioning UI for admins
-- [ ] Implement spaced repetition for MCQ practice
+- [ ] Implement spaced repetition for MCQ practice ✅ Done (RevisionQueue)
 
 ### Long Term (3-6 months)
 
