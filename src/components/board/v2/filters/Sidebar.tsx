@@ -18,11 +18,8 @@ export function Sidebar() {
   const setFilter = useBoardFilterStore((s) => s.setFilter)
 
   const yearOptions = useMemo(() => {
-    const items = metadata.yearOptions || []
-    return items.length > 0 ? items : Array.from({ length: 10 }, (_, i) => {
-      const y = String(2025 - i); return { value: y, label: y }
-    })
-  }, [metadata.yearOptions])
+    return metadata.questionYearOptions || []
+  }, [metadata.questionYearOptions])
 
   const typeOptions = [
     { value: 'mcq', label: 'MCQ' },

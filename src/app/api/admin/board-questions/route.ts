@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { softDelete } from '@/lib/soft-delete'
 import { auditFromRequest, AuditActions, getClientIP } from '@/lib/audit'
 import { createVersion } from '@/lib/version-history'
+import { resolveYearId } from '@/lib/year-utils'
 
 const createBoardMcqSchema = z.object({
   type: z.literal('mcq'),
@@ -26,8 +27,9 @@ const createBoardMcqSchema = z.object({
   chapterId: z.string().min(1, 'অধ্যায় আইডি আবশ্যক'),
   classLevel: z.string().min(1, 'শ্রেণি আবশ্যক'),
   subjectId: z.string().min(1, 'বিষয় আইডি আবশ্যক'),
-  board: z.string().nullable().optional(),
-  year: z.string().nullable().optional(),
+  board: z.string().min(1, 'বোর্ড আবশ্যক'),
+  year: z.string().min(1, 'সাল আবশ্যক'),
+  yearId: z.string().nullable().optional(),
   topic: z.string().nullable().optional(),
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
   isPremium: z.boolean().optional(),
@@ -59,8 +61,9 @@ const createBoardCqSchema = z.object({
   chapterId: z.string().min(1, 'অধ্যায় আইডি আবশ্যক'),
   classLevel: z.string().min(1, 'শ্রেণি আবশ্যক'),
   subjectId: z.string().min(1, 'বিষয় আইডি আবশ্যক'),
-  board: z.string().nullable().optional(),
-  year: z.string().nullable().optional(),
+  board: z.string().min(1, 'বোর্ড আবশ্যক'),
+  year: z.string().min(1, 'সাল আবশ্যক'),
+  yearId: z.string().nullable().optional(),
   topic: z.string().nullable().optional(),
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
   isPremium: z.boolean().optional(),
@@ -115,6 +118,7 @@ export async function GET(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
     const board = searchParams.get('board')
     const year = searchParams.get('year')
     const classLevel = searchParams.get('classLevel')
@@ -123,6 +127,15 @@ export async function GET(request: Request) {
     const q = searchParams.get('q')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
+
+    // Single-item fetch for edit mode
+    if (id) {
+      const mcq = await db.mCQ.findUnique({ where: { id }, include: { chapter: { select: { id: true, name: true, slug: true, subject: { select: { id: true, name: true } } } } } })
+      if (mcq) return apiResponse({ ...mcq, type: 'mcq' })
+      const cq = await db.cQ.findUnique({ where: { id }, include: { chapter: { select: { id: true, name: true, slug: true, subject: { select: { id: true, name: true } } } } } })
+      if (cq) return apiResponse({ ...cq, type: 'cq' })
+      return apiError('প্রশ্ন খুঁজে পাওয়া যায়নি', 404)
+    }
 
     if (type === 'lecture') {
       return paginatedApiResponse([], { page, limit, total: 0, totalPages: 0 })
@@ -147,7 +160,7 @@ export async function GET(request: Request) {
       },
     }
 
-    if (type === 'MCQ') {
+    if (type === 'mcq') {
       const where = buildWhere(['question', 'explanation', 'tags', 'topic'])
       const [records, total] = await Promise.all([
         db.mCQ.findMany({ where, include: { chapter: chapterInclude }, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
@@ -156,7 +169,7 @@ export async function GET(request: Request) {
       return paginatedApiResponse(records.map((r) => mapMCQ(r as unknown as Record<string, unknown>)), { page, limit, total, totalPages: Math.ceil(total / limit) })
     }
 
-    if (type === 'CQ') {
+    if (type === 'cq') {
       const where = buildWhere(['uddeepok', 'question1', 'question2', 'question3', 'question4', 'topic'])
       const [records, total] = await Promise.all([
         db.cQ.findMany({ where, include: { chapter: chapterInclude }, orderBy: { createdAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
@@ -168,9 +181,12 @@ export async function GET(request: Request) {
     const mcqWhere = buildWhere(['question', 'explanation', 'tags', 'topic'])
     const cqWhere = buildWhere(['uddeepok', 'question1', 'question2', 'question3', 'question4', 'topic'])
 
+    // Bounded overfetch: fetch page*limit from each table, then merge+sort+slice.
+    // Capped at 500 to prevent unbounded memory usage on high page numbers.
+    const fetchTake = Math.min(page * limit, 500)
     const [mcqRecords, cqRecords, mcqTotal, cqTotal] = await Promise.all([
-      db.mCQ.findMany({ where: mcqWhere, include: { chapter: chapterInclude }, orderBy: { createdAt: 'desc' } }),
-      db.cQ.findMany({ where: cqWhere, include: { chapter: chapterInclude }, orderBy: { createdAt: 'desc' } }),
+      db.mCQ.findMany({ where: mcqWhere, include: { chapter: chapterInclude }, orderBy: { createdAt: 'desc' }, take: fetchTake }),
+      db.cQ.findMany({ where: cqWhere, include: { chapter: chapterInclude }, orderBy: { createdAt: 'desc' }, take: fetchTake }),
       db.mCQ.count({ where: mcqWhere }),
       db.cQ.count({ where: cqWhere }),
     ])
@@ -201,10 +217,13 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { type } = body
 
-    if (type === 'MCQ') {
+    if (type === 'mcq') {
       const validation = validateBody(createBoardMcqSchema, body)
       if ('error' in validation) return validation.error
-      const { question, questionImage, optionA, optionAImage, optionB, optionBImage, optionC, optionCImage, optionD, optionDImage, correctAnswer, explanation, explanationImage, chapterId, classLevel, subjectId, board, year, topic, difficulty, isPremium, price, tags, isActive } = validation.data
+      const { question, questionImage, optionA, optionAImage, optionB, optionBImage, optionC, optionCImage, optionD, optionDImage, correctAnswer, explanation, explanationImage, chapterId, classLevel, subjectId, board, year, yearId, topic, difficulty, isPremium, price, tags, isActive } = validation.data
+
+      // Resolve yearId from ExamYear if not provided but year is
+      const resolvedYearId = yearId || (year ? await resolveYearId(year) : null)
 
       const data = await db.mCQ.create({
         data: {
@@ -215,7 +234,8 @@ export async function POST(request: Request) {
           optionD, optionDImage: optionDImage || null,
           correctAnswer, explanation: explanation || null, explanationImage: explanationImage || null,
           chapterId, classLevel, subjectId,
-          board: board || null, year: year || null, topic: topic || null,
+          board: board || null, year: year || null, yearId: resolvedYearId,
+          topic: topic || null,
           difficulty: (difficulty || 'MEDIUM').toUpperCase() as 'EASY' | 'MEDIUM' | 'HARD',
           isPremium: isPremium ?? false, price: price ?? 0,
           tags: tags || null, isActive: isActive ?? true,
@@ -229,7 +249,10 @@ export async function POST(request: Request) {
 
     const validation = validateBody(createBoardCqSchema, body)
     if ('error' in validation) return validation.error
-    const { uddeepok, uddeepokImage, question1, question1Image, question2, question2Image, question3, question3Image, question4, question4Image, answer1, answer1Image, answer2, answer2Image, answer3, answer3Image, answer4, answer4Image, chapterId, classLevel, subjectId, board, year, topic, difficulty, isPremium, price, tags, isActive } = validation.data
+    const { uddeepok, uddeepokImage, question1, question1Image, question2, question2Image, question3, question3Image, question4, question4Image, answer1, answer1Image, answer2, answer2Image, answer3, answer3Image, answer4, answer4Image, chapterId, classLevel, subjectId, board, year, yearId, topic, difficulty, isPremium, price, tags, isActive } = validation.data
+
+    // Resolve yearId from ExamYear if not provided but year is
+    const resolvedYearId = yearId || (year ? await resolveYearId(year) : null)
 
     const data = await db.cQ.create({
       data: {
@@ -243,7 +266,8 @@ export async function POST(request: Request) {
         answer3: answer3 || '', answer3Image: answer3Image || null,
         answer4: answer4 || '', answer4Image: answer4Image || null,
         chapterId, classLevel, subjectId,
-        board: board || null, year: year || null, topic: topic || null,
+        board: board || null, year: year || null, yearId: resolvedYearId,
+        topic: topic || null,
         difficulty: (difficulty || 'MEDIUM').toUpperCase() as 'EASY' | 'MEDIUM' | 'HARD',
         isPremium: isPremium ?? false, price: price ?? 0,
         tags: tags || null, isActive: isActive ?? true,
@@ -281,11 +305,15 @@ export async function PUT(request: Request) {
         'question', 'questionImage', 'optionA', 'optionAImage', 'optionB', 'optionBImage',
         'optionC', 'optionCImage', 'optionD', 'optionDImage',
         'correctAnswer', 'explanation', 'explanationImage', 'chapterId', 'classLevel',
-        'subjectId', 'board', 'year', 'topic', 'difficulty',
+        'subjectId', 'board', 'year', 'yearId', 'topic', 'difficulty',
         'isPremium', 'price', 'tags', 'isActive',
       ]
       for (const field of allowedFields) {
         if (updateData[field] !== undefined) data[field] = updateData[field]
+      }
+      // Auto-resolve yearId from year if year changed but yearId not provided
+      if (data.year !== undefined && data.year !== existing.year && data.yearId === undefined) {
+        data.yearId = await resolveYearId(data.year as string)
       }
 
       const ipAddress = getClientIP(request)
@@ -316,11 +344,15 @@ export async function PUT(request: Request) {
       'question3', 'question3Image', 'question4', 'question4Image',
       'answer1', 'answer1Image', 'answer2', 'answer2Image',
       'answer3', 'answer3Image', 'answer4', 'answer4Image',
-      'chapterId', 'classLevel', 'subjectId', 'board', 'year', 'topic',
+      'chapterId', 'classLevel', 'subjectId', 'board', 'year', 'yearId', 'topic',
       'difficulty', 'isPremium', 'price', 'tags', 'isActive',
     ]
     for (const field of allowedFields) {
       if (updateData[field] !== undefined) data[field] = updateData[field]
+    }
+    // Auto-resolve yearId from year if year changed but yearId not provided
+    if (data.year !== undefined && data.year !== existingCq.year && data.yearId === undefined) {
+      data.yearId = await resolveYearId(data.year as string)
     }
 
     const ipAddress = getClientIP(request)

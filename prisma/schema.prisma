@@ -281,6 +281,7 @@ model MCQ {
   subjectId        String
   board            String? // dhaka, rajshahi, etc.
   year             String?
+  yearId           String? // FK to ExamYear — central hierarchy
   topic            String? // specific topic/chapter section
   difficulty       String    @default("MEDIUM") // easy, medium, hard
   isPremium        Boolean   @default(false)
@@ -295,11 +296,13 @@ model MCQ {
 
   chapter          Chapter              @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   examSetQuestions MCQExamSetQuestion[]
+  examYear         ExamYear?            @relation(fields: [yearId], references: [id])
 
   @@index([classLevel, subjectId, chapterId, isActive, deletedAt])
   @@index([chapterId, isActive, deletedAt])
   @@index([board, year, isActive, deletedAt])
   @@index([board, year, classLevel, isActive, deletedAt])
+  @@index([yearId])
 }
 
 // ============ CQ SYSTEM ============
@@ -329,6 +332,7 @@ model CQ {
   subjectId      String
   board          String?
   year           String?
+  yearId         String? // FK to ExamYear — central hierarchy
   topic          String? // specific topic/chapter section
   difficulty     String    @default("MEDIUM")
   isPremium      Boolean   @default(false)
@@ -344,11 +348,13 @@ model CQ {
   chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 
   examSetQuestions CQExamSetQuestion[]
+  examYear         ExamYear?            @relation(fields: [yearId], references: [id])
 
   @@index([classLevel, subjectId, chapterId, isActive, deletedAt])
   @@index([chapterId, isActive, deletedAt])
   @@index([board, year, isActive, deletedAt])
   @@index([board, year, classLevel, isActive, deletedAt])
+  @@index([yearId])
 }
 
 // ============ EXAM SYSTEM ============
@@ -819,12 +825,18 @@ model ExamYear {
   deleteReason String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+
+  mcqs          MCQ[]
+  cqs           CQ[]
+  boardYears    BoardYear[]
+  contentBundles ContentBundle[]
 }
 
 model BoardYear {
   id           String    @id @default(cuid())
   board        String // dhaka, rajshahi, etc. (slug reference to Board)
   year         String // 2024, 2023, etc.
+  yearId       String? // FK to ExamYear — central hierarchy
   isActive     Boolean   @default(true)
   deletedAt    DateTime?
   deletedBy    String?
@@ -832,7 +844,10 @@ model BoardYear {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  examYear ExamYear? @relation(fields: [yearId], references: [id])
+
   @@unique([board, year])
+  @@index([yearId])
 }
 
 // ============ CONTENT TYPE SYSTEM ============
@@ -940,6 +955,7 @@ model ContentBundle {
   classLevel    String? // Optional: target class
   board         String? // Optional: target board
   year          String? // Optional: target year
+  yearId        String? // FK to ExamYear — central hierarchy
   type          String    @default("MIXED") // mcq, cq, lecture, board, mixed
   isActive      Boolean   @default(true)
   order         Int       @default(0)
@@ -949,9 +965,11 @@ model ContentBundle {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  items BundleItem[]
+  items    BundleItem[]
+  examYear ExamYear?  @relation(fields: [yearId], references: [id])
 
   @@index([isActive, deletedAt])
+  @@index([yearId])
 }
 
 model BundleItem {

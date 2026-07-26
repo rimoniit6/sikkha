@@ -23,10 +23,12 @@ export async function GET(request: NextRequest) {
     })
 
     // Build where clause for MCQs based on filters
+    // Must match board listing API filters: isActive, deletedAt=null, board not null, year not null
     const mcqWhere: Record<string, unknown> = {
       board: { not: null },
       year: { not: null },
       isActive: true,
+      deletedAt: null,
     }
     if (classLevel) mcqWhere.classLevel = classLevel
     if (year) mcqWhere.year = year
@@ -35,6 +37,7 @@ export async function GET(request: NextRequest) {
       board: { not: null },
       year: { not: null },
       isActive: true,
+      deletedAt: null,
     }
     if (classLevel) cqWhere.classLevel = classLevel
     if (year) cqWhere.year = year
@@ -83,14 +86,28 @@ export async function GET(request: NextRequest) {
         })
       : []
 
-    // Get total board question counts per class level for stats
+    // Get total board question counts per class level for stats (single query instead of N+1)
     const classLevelCounts: Record<string, { mcqCount: number; cqCount: number }> = {}
-    for (const cls of classLevelSlugs) {
-      const [mcqCount, cqCount] = await Promise.all([
-        db.mCQ.count({ where: { ...mcqWhere, classLevel: cls } }),
-        db.cQ.count({ where: { ...cqWhere, classLevel: cls } }),
+    if (classLevelSlugs.length > 0) {
+      const [mcqCounts, cqCounts] = await Promise.all([
+        db.mCQ.groupBy({
+          by: ['classLevel'],
+          where: mcqWhere,
+          _count: { id: true },
+        }),
+        db.cQ.groupBy({
+          by: ['classLevel'],
+          where: cqWhere,
+          _count: { id: true },
+        }),
       ])
-      classLevelCounts[cls] = { mcqCount, cqCount }
+      for (const row of mcqCounts) {
+        classLevelCounts[row.classLevel] = { mcqCount: row._count.id, cqCount: 0 }
+      }
+      for (const row of cqCounts) {
+        if (!classLevelCounts[row.classLevel]) classLevelCounts[row.classLevel] = { mcqCount: 0, cqCount: 0 }
+        classLevelCounts[row.classLevel].cqCount = row._count.id
+      }
     }
 
     const classLevels = classCategories.map(c => ({
@@ -113,7 +130,7 @@ export async function GET(request: NextRequest) {
     const uniqueSubjectIds = Array.from(subjectIdsSet)
     const subjects = uniqueSubjectIds.length > 0
       ? await db.subject.findMany({
-          where: { id: { in: uniqueSubjectIds }, isActive: true },
+          where: { id: { in: uniqueSubjectIds }, isActive: true, deletedAt: null },
           select: { id: true, name: true, slug: true },
           orderBy: { order: 'asc' },
         })

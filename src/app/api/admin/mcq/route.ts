@@ -8,6 +8,7 @@ import { handleApiError } from '@/lib/errors'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { transitionWorkflow } from '@/lib/workflow'
+import { resolveYearId } from '@/lib/year-utils'
 
 const createMcqSchema = z.object({
   question: z.string().min(1, 'প্রশ্ন আবশ্যক'),
@@ -28,6 +29,7 @@ const createMcqSchema = z.object({
   subjectId: z.string().min(1, 'বিষয় আইডি আবশ্যক'),
   board: z.string().nullable().optional(),
   year: z.string().nullable().optional(),
+  yearId: z.string().nullable().optional(),
   topic: z.string().nullable().optional(),
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
   isPremium: z.boolean().optional(),
@@ -131,6 +133,7 @@ export async function POST(request: Request) {
           subjectId: fields.subjectId,
           board: fields.board ?? null,
           year: fields.year ?? null,
+          yearId: fields.yearId ?? (fields.year ? await resolveYearId(fields.year) : null),
           topic: fields.topic ?? null,
           difficulty: (fields.difficulty || 'MEDIUM').toUpperCase() as 'EASY' | 'MEDIUM' | 'HARD',
           isPremium: deriveIsPremium(fields.price),
@@ -183,7 +186,7 @@ export async function PUT(request: Request) {    const auth = await withAdmin(re
       'optionD', 'optionDImage',
       'correctAnswer', 'explanation', 'explanationImage',
       'chapterId', 'classLevel',
-      'subjectId', 'board', 'year', 'topic', 'difficulty', 'isPremium',
+      'subjectId', 'board', 'year', 'yearId', 'topic', 'difficulty', 'isPremium',
       'price', 'tags', 'isActive',
     ]
 

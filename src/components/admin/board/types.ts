@@ -3,6 +3,7 @@ export interface BoardQuestion {
   type: 'mcq' | 'cq'
   board: string | null
   year: string | null
+  yearId: string | null
   topic: string | null
   classLevel: string
   subjectId: string
@@ -24,6 +25,7 @@ export interface FormState {
   type: 'mcq' | 'cq'
   board: string
   year: string
+  yearId: string
   topic: string
   classId: string
   subjectId: string

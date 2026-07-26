@@ -6,6 +6,7 @@ import { toDecimal } from '@/lib/decimal'
 import * as XLSX from 'xlsx'
 import { auditFromRequest, AuditActions } from '@/lib/audit'
 import { handleApiError } from '@/lib/errors'
+import { resolveYearId } from '@/lib/year-utils'
 
 // Excel column mapping (Bengali + English headers → DB fields)
 const COLUMN_MAP: Record<string, string> = {
@@ -182,6 +183,9 @@ export async function POST(request: Request) {
 
       const finalSubjectId = chapterSubjectMap.get(chapterId) || resolvedSubjectId
 
+      const yearVal = mapped.year || null
+      const yearIdVal = yearVal ? await resolveYearId(yearVal) : null
+
       insertPayloads.push({
         mcqData: {
           question: mapped.question,
@@ -195,7 +199,8 @@ export async function POST(request: Request) {
           classLevel: mapped.classLevel || defaultClassLevel || examSet.package?.class?.slug || '',
           subjectId: finalSubjectId || '',
           board: mapped.board || null,
-          year: mapped.year || null,
+          year: yearVal,
+          yearId: yearIdVal,
           topic: mapped.topic || null,
           difficulty: (mapped.difficulty || 'MEDIUM').toUpperCase() as 'EASY' | 'MEDIUM' | 'HARD',
           isPremium: mapped.isPremium === 'true' || mapped.isPremium === '1' || mapped.isPremium === 'হ্যাঁ',

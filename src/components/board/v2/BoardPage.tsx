@@ -151,7 +151,7 @@ export default function BoardPage() {
     labelMapsSeeded.current = true
     setLabelMap('classLevels', Object.fromEntries(metadata.classOptions.map((o) => [o.value, o.label])))
     setLabelMap('boards', Object.fromEntries(metadata.boardOptions.map((o) => [o.value, o.label])))
-    setLabelMap('years', Object.fromEntries(metadata.yearLabels.map((y) => [y, y])))
+    setLabelMap('years', Object.fromEntries(metadata.questionYearLabels.map((y) => [y, y])))
     setLabelMap('subjects', Object.fromEntries(metadata.subjects.map((s) => [s.id, s.name])))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [metadata.hasData])

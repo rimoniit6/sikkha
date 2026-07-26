@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { auditFromRequest, AuditActions, EntityTypes, getClientIP } from '@/lib/audit'
 import { guardDeleteDependencies } from '@/lib/delete-guard'
 import { transitionWorkflow } from '@/lib/workflow'
+import { resolveYearId } from '@/lib/year-utils'
 
 const createCqSchema = z.object({
   uddeepok: z.string().min(1, 'উদ্দীপক আবশ্যক'),
@@ -33,6 +34,7 @@ const createCqSchema = z.object({
   subjectId: z.string().min(1, 'বিষয় আইডি আবশ্যক'),
   board: z.string().nullable().optional(),
   year: z.string().nullable().optional(),
+  yearId: z.string().nullable().optional(),
   topic: z.string().nullable().optional(),
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
   isPremium: z.boolean().optional(),
@@ -121,7 +123,7 @@ export async function POST(request: Request) {
       question4, question4Image, answer1, answer1Image,
       answer2, answer2Image, answer3, answer3Image,
       answer4, answer4Image, chapterId, classLevel, subjectId,
-      board, year, topic, difficulty, isPremium, price, tags, isActive,
+      board, year, yearId, topic, difficulty, isPremium, price, tags, isActive,
     } = validation.data
 
     const data = await db.$transaction(async (tx) => {
@@ -137,7 +139,9 @@ export async function POST(request: Request) {
           answer3: answer3 || '', answer3Image: answer3Image || null,
           answer4: answer4 || '', answer4Image: answer4Image || null,
           chapterId, classLevel, subjectId,
-          board: board || null, year: year || null, topic: topic || null,
+          board: board || null, year: year || null,
+          yearId: yearId ?? (year ? await resolveYearId(year) : null),
+          topic: topic || null,
           difficulty: (difficulty || 'MEDIUM').toUpperCase() as 'EASY' | 'MEDIUM' | 'HARD',
           isPremium: deriveIsPremium(price), price: price ?? 0,
           tags: tags || null, isActive: isActive ?? true,
@@ -180,7 +184,7 @@ export async function PUT(request: Request) {
       'question3', 'question3Image', 'question4', 'question4Image',
       'answer1', 'answer1Image', 'answer2', 'answer2Image',
       'answer3', 'answer3Image', 'answer4', 'answer4Image',
-      'chapterId', 'classLevel', 'subjectId', 'board', 'year', 'topic',
+      'chapterId', 'classLevel', 'subjectId', 'board', 'year', 'yearId', 'topic',
       'difficulty', 'isPremium', 'price', 'tags', 'isActive',
     ]
 

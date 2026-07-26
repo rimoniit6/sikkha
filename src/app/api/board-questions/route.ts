@@ -102,10 +102,12 @@ export async function GET(request: Request) {
     const topicList = topic ? topic.split(',').filter(Boolean) : []
 
     // ----- Prisma WHERE (used for data fetching & counts) -------------
+    // Must match questionYears hierarchy metadata filters exactly
     const baseWhere: Record<string, unknown> = {
       isActive: true,
       board: { not: null },
       year: { not: null },
+      deletedAt: null,
     }
     if (boardList.length > 0) baseWhere.board = { in: boardList }
     if (yearList.length > 0) baseWhere.year = { in: yearList }
@@ -120,7 +122,7 @@ export async function GET(request: Request) {
     const accessFilter =
       access === 'free' ? { isPremium: false }
         : access === 'premium' ? { isPremium: true }
-        : access === 'unlocked' ? { isPremium: false }
+        : access === 'unlocked' ? undefined  // show all — access control hides answers for non-purchased
         : undefined
 
     const mcqWhere: Record<string, unknown> = { ...baseWhere }
@@ -228,7 +230,15 @@ export async function GET(request: Request) {
               FROM "MCQ"
               WHERE ${analyticsWhere(analyticsParams, 'question', search ?? undefined)}
             `
-            .then((r) => r[0]!)
+            .then((r) => {
+              const row = r[0]!
+              return {
+                premiumCount: Number(row.premiumCount),
+                distinctBoards: Number(row.distinctBoards),
+                distinctSubjects: Number(row.distinctSubjects),
+                distinctChapters: Number(row.distinctChapters),
+              }
+            })
         : Promise.resolve<AnalyticsRow>({
             premiumCount: 0,
             distinctBoards: 0,
@@ -246,7 +256,15 @@ export async function GET(request: Request) {
               FROM "CQ"
               WHERE ${analyticsWhere(analyticsParams, 'uddeepok', search ?? undefined)}
             `
-            .then((r) => r[0]!)
+            .then((r) => {
+              const row = r[0]!
+              return {
+                premiumCount: Number(row.premiumCount),
+                distinctBoards: Number(row.distinctBoards),
+                distinctSubjects: Number(row.distinctSubjects),
+                distinctChapters: Number(row.distinctChapters),
+              }
+            })
         : Promise.resolve<AnalyticsRow>({
             premiumCount: 0,
             distinctBoards: 0,

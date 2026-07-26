@@ -11,7 +11,8 @@ import { handleApiError } from '@/lib/errors'
  * Returns all metadata needed across MCQ, CQ, Exam, and other forms:
  * - classes (with subjects count)
  * - boards (active only)
- * - years (active ExamYear records)
+ * - years (active ExamYear records — for admin use)
+ * - questionYears (distinct years from actual question data — for public filters)
  * - board-years mapping (active only)
  */
 export async function GET() {
@@ -22,7 +23,7 @@ export async function GET() {
     }
 
     // Fetch all data in parallel
-    const [classes, boards, examYears, boardYears] = await Promise.all([
+    const [classes, boards, examYears, boardYears, mcqYears, cqYears] = await Promise.all([
       db.classCategory.findMany({
         where: { isActive: true },
         select: {
@@ -67,7 +68,26 @@ export async function GET() {
         },
         orderBy: [{ year: 'desc' }, { board: 'asc' }],
       }),
+      // Distinct years from actual MCQ data (must match board listing API filters)
+      db.mCQ.findMany({
+        where: { isActive: true, deletedAt: null, board: { not: null }, year: { not: null } },
+        select: { year: true },
+        distinct: ['year'],
+      }),
+      // Distinct years from actual CQ data (must match board listing API filters)
+      db.cQ.findMany({
+        where: { isActive: true, deletedAt: null, board: { not: null }, year: { not: null } },
+        select: { year: true },
+        distinct: ['year'],
+      }),
     ])
+
+    // Build questionYears: distinct years from actual question data only (MCQ + CQ)
+    // Must match board listing API filters exactly: isActive, deletedAt=null, board not null, year not null
+    const questionYearSet = new Set<string>()
+    for (const y of mcqYears) { if (y.year) questionYearSet.add(y.year) }
+    for (const y of cqYears) { if (y.year) questionYearSet.add(y.year) }
+    const questionYears = Array.from(questionYearSet).sort((a, b) => Number(b) - Number(a))
 
     // Also fetch subjects grouped by class for full hierarchy
     const subjects = await db.subject.findMany({
@@ -106,6 +126,7 @@ export async function GET() {
         chapters,
         boards,
         years: examYears,
+        questionYears,      // <-- distinct years from actual question data (user-facing filter)
         boardYears,
       },
     }, { headers: cacheHeaders.public.long })

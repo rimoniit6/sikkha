@@ -44,6 +44,7 @@ interface BoardQuestionEditorProps {
   subjects: SubjectItem[]
   chapters: ChapterItem[]
   boardOptions: { value: string; label: string }[]
+  yearOptions: { value: string; label: string }[]
   classLabelMap: Record<string, string>
   boardLabelMap: Record<string, string>
   setViewMode: (v: 'list' | 'editor') => void
@@ -55,7 +56,7 @@ interface BoardQuestionEditorProps {
 
 export default function BoardQuestionEditor({
   step, setStep: _setStep, editId, form, setForm, saving,
-  classes, subjects, chapters, boardOptions,
+  classes, subjects, chapters, boardOptions, yearOptions,
   classLabelMap: _classLabelMap, boardLabelMap,
   setViewMode, goNext, goPrev, handleSave, handleTypeChange,
 }: BoardQuestionEditorProps) {
@@ -259,7 +260,19 @@ export default function BoardQuestionEditor({
                   </div>
                   <div className="space-y-2">
                     <Label>সাল <span className="text-xs text-destructive">(আবশ্যক)</span></Label>
-                    <Input type="text" placeholder="সাল লিখুন (যেমন: 2024)" value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })} />
+                    <Select value={form.yearId} onValueChange={(v) => {
+                      const selected = yearOptions.find((y) => y.value === v)
+                      setForm({ ...form, yearId: v, year: selected?.label || v })
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="সাল নির্বাচন করুন" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {yearOptions.map((y) => (
+                          <SelectItem key={y.value} value={y.value}>{y.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>

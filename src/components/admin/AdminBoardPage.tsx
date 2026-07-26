@@ -53,7 +53,7 @@ export default function AdminBoardPage() {
   const [chapters, setChapters] = useState<ChapterItem[]>([])
   const [filterSubjects, setFilterSubjects] = useState<SubjectItem[]>([])
 
-  const { boardOptions, classLevelLabels: classLabelMap, boardSlugToLabel: boardLabelMap } = useHierarchyMetadata()
+  const { boardOptions, classLevelLabels: classLabelMap, boardSlugToLabel: boardLabelMap, yearOptions } = useHierarchyMetadata()
 
   useEffect(() => {
     fetch('/api/admin/classes')
@@ -191,57 +191,117 @@ export default function AdminBoardPage() {
     setViewMode('editor')
   }
 
-  const openEdit = (q: BoardQuestion) => {
+  const openEdit = async (q: BoardQuestion) => {
     setEditId(q.id)
     setEditType(q.type)
-    setForm({
-      type: q.type,
-      board: q.board || '',
-      year: q.year || '',
-      topic: q.topic || '',
-      classId: q.classLevel,
-      subjectId: q.subjectId,
-      chapterId: q.chapterId,
-      difficulty: q.difficulty || 'easy',
-      isPremium: q.isPremium,
-      price: '',
-      tags: '',
-      question: q.type === 'mcq' ? q.title : '',
-      questionImage: '',
-      optionA: '',
-      optionAImage: '',
-      optionB: '',
-      optionBImage: '',
-      optionC: '',
-      optionCImage: '',
-      optionD: '',
-      optionDImage: '',
-      correctAnswer: 'A',
-      explanation: '',
-      explanationImage: '',
-      uddeepok: q.type === 'cq' ? q.title : '',
-      uddeepokImage: '',
-      question1: '',
-      question1Image: '',
-      question2: '',
-      question2Image: '',
-      question3: '',
-      question3Image: '',
-      question4: '',
-      question4Image: '',
-      answer1: '',
-      answer1Image: '',
-      answer2: '',
-      answer2Image: '',
-      answer3: '',
-      answer3Image: '',
-      answer4: '',
-      answer4Image: '',
-    })
-    if (q.classLevel) fetchSubjects(q.classLevel)
-    if (q.subjectId) fetchChapters(q.subjectId)
     setStep(1)
     setViewMode('editor')
+
+    // Fetch full question details for content fields
+    try {
+      const res = await fetch(`/api/admin/board-questions?id=${q.id}`)
+      if (res.ok) {
+        const json = await res.json()
+        const full = json.data || json
+        // Auto-resolve yearId from existing year
+        const matchedYear = yearOptions.find((y) => y.label === q.year)
+        setForm({
+          type: q.type,
+          board: q.board || '',
+          year: q.year || '',
+          yearId: full.yearId || matchedYear?.value || '',
+          topic: full.topic || '',
+          classId: q.classLevel,
+          subjectId: q.subjectId,
+          chapterId: q.chapterId,
+          difficulty: (full.difficulty || 'medium').toLowerCase(),
+          isPremium: full.isPremium ?? false,
+          price: full.price ? String(full.price) : '',
+          tags: full.tags || '',
+          question: q.type === 'mcq' ? (full.question || '') : '',
+          questionImage: full.questionImage || '',
+          optionA: full.optionA || '',
+          optionAImage: full.optionAImage || '',
+          optionB: full.optionB || '',
+          optionBImage: full.optionBImage || '',
+          optionC: full.optionC || '',
+          optionCImage: full.optionCImage || '',
+          optionD: full.optionD || '',
+          optionDImage: full.optionDImage || '',
+          correctAnswer: full.correctAnswer || 'A',
+          explanation: full.explanation || '',
+          explanationImage: full.explanationImage || '',
+          uddeepok: q.type === 'cq' ? (full.uddeepok || '') : '',
+          uddeepokImage: full.uddeepokImage || '',
+          question1: full.question1 || '',
+          question1Image: full.question1Image || '',
+          question2: full.question2 || '',
+          question2Image: full.question2Image || '',
+          question3: full.question3 || '',
+          question3Image: full.question3Image || '',
+          question4: full.question4 || '',
+          question4Image: full.question4Image || '',
+          answer1: full.answer1 || '',
+          answer1Image: full.answer1Image || '',
+          answer2: full.answer2 || '',
+          answer2Image: full.answer2Image || '',
+          answer3: full.answer3 || '',
+          answer3Image: full.answer3Image || '',
+          answer4: full.answer4 || '',
+          answer4Image: full.answer4Image || '',
+        })
+      }
+    } catch {
+      // Fallback: populate with what we have from the list
+      const matchedYear = yearOptions.find((y) => y.label === q.year)
+      setForm({
+        type: q.type,
+        board: q.board || '',
+        year: q.year || '',
+        yearId: matchedYear?.value || '',
+        topic: q.topic || '',
+        classId: q.classLevel,
+        subjectId: q.subjectId,
+        chapterId: q.chapterId,
+        difficulty: q.difficulty || 'medium',
+        isPremium: q.isPremium,
+        price: '',
+        tags: '',
+        question: q.type === 'mcq' ? q.title : '',
+        questionImage: '',
+        optionA: '',
+        optionAImage: '',
+        optionB: '',
+        optionBImage: '',
+        optionC: '',
+        optionCImage: '',
+        optionD: '',
+        optionDImage: '',
+        correctAnswer: 'A',
+        explanation: '',
+        explanationImage: '',
+        uddeepok: q.type === 'cq' ? q.title : '',
+        uddeepokImage: '',
+        question1: '',
+        question1Image: '',
+        question2: '',
+        question2Image: '',
+        question3: '',
+        question3Image: '',
+        question4: '',
+        question4Image: '',
+        answer1: '',
+        answer1Image: '',
+        answer2: '',
+        answer2Image: '',
+        answer3: '',
+        answer3Image: '',
+        answer4: '',
+        answer4Image: '',
+      })
+    }
+    if (q.classLevel) fetchSubjects(q.classLevel)
+    if (q.subjectId) fetchChapters(q.subjectId)
   }
 
   const handleTypeChange = (newType: 'mcq' | 'cq') => {
@@ -325,6 +385,7 @@ export default function AdminBoardPage() {
           subjectId: form.subjectId,
           board: form.board,
           year: form.year,
+          yearId: form.yearId || undefined,
           topic: form.topic || undefined,
           difficulty: form.difficulty,
           isPremium: form.isPremium,
@@ -357,6 +418,7 @@ export default function AdminBoardPage() {
           subjectId: form.subjectId,
           board: form.board,
           year: form.year,
+          yearId: form.yearId || undefined,
           topic: form.topic || undefined,
           difficulty: form.difficulty,
           isPremium: form.isPremium,
@@ -449,6 +511,7 @@ export default function AdminBoardPage() {
         subjects={subjects}
         chapters={chapters}
         boardOptions={boardOptions}
+        yearOptions={yearOptions}
         classLabelMap={classLabelMap}
         boardLabelMap={boardLabelMap}
         setViewMode={setViewMode}

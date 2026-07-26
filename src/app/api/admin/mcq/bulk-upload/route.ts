@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx'
 import { safeParseExcelFromFile, ExcelParseError } from '@/lib/excel-parse'
 import { auditFromRequest, AuditActions } from '@/lib/audit'
 import { handleApiError } from '@/lib/errors'
+import { resolveYearId } from '@/lib/year-utils'
 
 // Excel column mapping (Bengali headers → DB fields)
 const COLUMN_MAP: Record<string, string> = {
@@ -147,6 +148,9 @@ export async function POST(request: Request) {
 
       const finalSubjectId = chapterSubjectMap.get(chapterId) || resolvedSubjectId
 
+      const yearVal = mapped.year || null
+      const yearIdVal = yearVal ? await resolveYearId(yearVal) : null
+
       insertPayloads.push({
         data: {
           question: mapped.question,
@@ -160,7 +164,8 @@ export async function POST(request: Request) {
           classLevel: mapped.classLevel || classLevel,
           subjectId: finalSubjectId || '',
           board: mapped.board || null,
-          year: mapped.year || null,
+          year: yearVal,
+          yearId: yearIdVal,
           topic: mapped.topic || null,
           difficulty: (mapped.difficulty || 'MEDIUM').toUpperCase() as 'EASY' | 'MEDIUM' | 'HARD',
           isPremium: mapped.isPremium === 'true' || mapped.isPremium === '1' || mapped.isPremium === 'হ্যাঁ',

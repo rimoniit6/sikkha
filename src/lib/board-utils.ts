@@ -121,7 +121,7 @@ export const SUBJECT_COLOR_PALETTE = [
 export const QUICK_FILTER_SHORTCUTS = [
   { id: 'ssc', label: 'SSC', icon: 'graduation', filters: { classLevels: ['ssc'] } },
   { id: 'hsc', label: 'HSC', icon: 'graduation', filters: { classLevels: ['hsc'] } },
-  { id: 'latest', label: 'Latest Year', icon: 'calendar', filters: { years: ['2025'] } },
+  // Quick filter for Latest Year — dynamically loaded from hierarchy metadata
   { id: 'dhaka', label: 'Dhaka Board', icon: 'map', filters: { boards: ['dhaka'] } },
   { id: 'rajshahi', label: 'Rajshahi Board', icon: 'map', filters: { boards: ['rajshahi'] } },
   { id: 'math', label: 'Mathematics', icon: 'calculator', filters: { subjects: ['mathematics'] } },

@@ -5,6 +5,7 @@ import { withAdmin, withCsrf, applyRateLimit, apiError } from '@/lib/api-utils'
 import { uploadLimiter } from '@/lib/rate-limit'
 import { handleApiError } from '@/lib/errors'
 import { auditFromRequest, AuditActions } from '@/lib/audit'
+import { resolveYearId } from '@/lib/year-utils'
 
 interface ImportError {
   row: number
@@ -54,9 +55,14 @@ export async function POST(request: Request) {
     const isBoard = type.startsWith('board-')
     const actualType = (isBoard ? type.replace('board-', '') : type).toUpperCase()
 
+    // Validate year against ExamYear master table
     if (isBoard) {
       if (!board) return apiError('বোর্ড প্রশ্নের জন্য বোর্ড আবশ্যক', 400)
       if (!year) return apiError('বোর্ড প্রশ্নের জন্য সাল আবশ্যক', 400)
+      const resolvedYearId = await resolveYearId(year)
+      if (!resolvedYearId) {
+        return apiError(`সাল "${year}" ডাটাবেজে খুঁজে পাওয়া যায়নি। পূর্বে /api/admin/years থেকে সাল যোগ করুন।`, 400)
+      }
     }
 
     const defaultDifficulty = difficulty || 'MEDIUM'
@@ -94,13 +100,17 @@ export async function POST(request: Request) {
         if (!answerMap[correctAnswer]) { validationErrors.push({ row: rowNum, message: `সঠিক উত্তর অবৈধ: "${correctAnswer}". A/B/C/D বা ক/খ/গ/ঘ ব্যবহার করুন` }); continue }
         correctAnswer = answerMap[correctAnswer]
 
+        // Resolve yearId for board questions
+        const insertYear = isBoard ? year : (year || null)
+        const insertYearId = insertYear ? await resolveYearId(insertYear) : null
+
         insertPayloads.push({
           model: 'mCQ',
           data: {
             question, optionA, optionB, optionC, optionD,
             correctAnswer: correctAnswer as 'A' | 'B' | 'C' | 'D',
             explanation: explanation || null, chapterId: chapterId!, classLevel, subjectId: subjectId!,
-            board: isBoard ? board : (board || null), year: isBoard ? year : (year || null),
+            board: isBoard ? board : (board || null), year: insertYear, yearId: insertYearId,
             topic: topic || null, difficulty: defaultDifficulty as 'EASY' | 'MEDIUM' | 'HARD',
             isPremium, price: isPremium ? priceVal : 0, isActive: true,
           },
@@ -132,13 +142,17 @@ export async function POST(request: Request) {
         if (!uddeepok) { validationErrors.push({ row: rowNum, message: 'উদ্দীপক ফাঁকা' }); continue }
         if (!question1 || !answer1) { validationErrors.push({ row: rowNum, message: 'প্রশ্ন ১ ও উত্তর ১ আবশ্যক' }); continue }
 
+        // Resolve yearId for board questions
+        const insertYear = isBoard ? year : (year || null)
+        const insertYearId = insertYear ? await resolveYearId(insertYear) : null
+
         insertPayloads.push({
           model: 'cQ',
           data: {
             uddeepok, question1, question2: question2 || '', question3: question3 || '', question4: question4 || '',
             answer1, answer2: answer2 || '', answer3: answer3 || '', answer4: answer4 || '',
             chapterId: chapterId!, classLevel, subjectId: subjectId!,
-            board: isBoard ? board : (board || null), year: isBoard ? year : (year || null),
+            board: isBoard ? board : (board || null), year: insertYear, yearId: insertYearId,
             topic: topic || null, difficulty: defaultDifficulty as 'EASY' | 'MEDIUM' | 'HARD',
             isPremium, price: isPremium ? priceVal : 0, isActive: true,
           },

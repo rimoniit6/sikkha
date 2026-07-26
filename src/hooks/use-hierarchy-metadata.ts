@@ -23,6 +23,7 @@ interface HierarchyMetadata {
   classes: HierarchyClass[]
   boards: HierarchyBoard[]
   years: HierarchyYear[]
+  questionYears: string[]    // <-- distinct years from actual question data
   subjects: HierarchySubject[]
   chapters: HierarchyChapter[]
 }
@@ -40,6 +41,8 @@ interface HierarchyMetadataHook {
   boardColorMap: Record<string, string>
   yearOptions: { value: string; label: string }[]
   yearLabels: string[]
+  questionYearOptions: { value: string; label: string }[]   // <-- from actual question data
+  questionYearLabels: string[]                                // <-- from actual question data
   getClassName: (slug: string) => string
   getBoardName: (slug: string) => string
   getClassColor: (slug: string) => string
@@ -103,6 +106,7 @@ async function fetchHierarchyMetadata(): Promise<HierarchyMetadata> {
     classes: data.classes || [],
     boards: data.boards || [],
     years: data.years || [],
+    questionYears: data.questionYears || [],
     subjects: data.subjects || [],
     chapters: data.chapters || [],
   }
@@ -134,6 +138,9 @@ export function useHierarchyMetadata(): HierarchyMetadataHook {
   )
   const yearOptions = useMemo(() => years.map((y) => ({ value: y.year, label: y.year })), [years])
   const yearLabels = useMemo(() => years.map((y) => y.year), [years])
+  const questionYears = useMemo(() => metadata?.questionYears || [], [metadata?.questionYears])
+  const questionYearOptions = useMemo(() => questionYears.map((y) => ({ value: y, label: y })), [questionYears])
+  const questionYearLabels = questionYears
 
   const classLevelColors: Record<string, string> = useMemo(
     () => Object.fromEntries(classes.map((c) => [c.slug, c.color || DEFAULT_CLASS_COLORS[c.slug] || 'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-300'])),
@@ -154,6 +161,7 @@ export function useHierarchyMetadata(): HierarchyMetadataHook {
     metadata, loading: isLoading, error: error?.message ?? null,
     classLevelLabels, classOptions, classLevelColors, slugGradients,
     boardOptions, boardSlugToLabel, boardColorMap, yearOptions, yearLabels,
+    questionYearOptions, questionYearLabels,
     getClassName, getBoardName, getClassColor, getClassGradient, getBoardColor,
     hasData: !!metadata?.classes?.length,
     subjects: memoizedSubjects,
