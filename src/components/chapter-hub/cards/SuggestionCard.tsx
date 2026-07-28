@@ -5,8 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import type { SuggestionItem } from '@/hooks/use-chapter-content'
 import { cn } from '@/lib/utils'
 import { EyeIcon, FileText } from 'lucide-react'
-import PremiumBadge from '@/components/shared/PremiumBadge'
-import type { AccessStatus } from '@/components/shared/PremiumBadge'
+import { PurchaseStatusBadge } from '@/components/shared/PurchaseStatusBadge'
+import type { AccessStatus } from '@/components/shared/PurchaseStatusBadge'
 
 interface SuggestionCardProps {
   suggestion: SuggestionItem
@@ -63,7 +63,7 @@ export function SuggestionCard({ suggestion, index, isPurchased = false, pending
               </div>
             </div>
 
-            <PremiumBadge state={accessStatus} size="sm" />
+            <PurchaseStatusBadge state={accessStatus} size="sm" />
           </div>
 
           <div className="flex gap-2 mt-4">

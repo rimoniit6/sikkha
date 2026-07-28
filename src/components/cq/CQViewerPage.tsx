@@ -1,7 +1,7 @@
 'use client'
 
 import BookmarkButton from '@/components/shared/BookmarkButton'
-import PremiumLock from '@/components/shared/PremiumLock'
+import PurchaseLockOverlay from '@/components/shared/PurchaseLockOverlay'
 import { Badge } from '@/components/ui/badge'
 import { Breadcrumb,BreadcrumbItem,BreadcrumbLink,BreadcrumbList,BreadcrumbPage,BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Button } from '@/components/ui/button'
@@ -350,7 +350,7 @@ export default function CQViewerPage() {
         {/* Premium Lock for entire CQ */}
         {isLocked ? (
           <div className="mt-6">
-            <PremiumLock
+            <PurchaseLockOverlay
               purchased={paymentStatus.purchased}
               pendingPayment={paymentStatus.pendingPayment}
               rejected={paymentStatus.rejected}
@@ -396,7 +396,7 @@ export default function CQViewerPage() {
                   ))}
                 </div>
               )}
-            </PremiumLock>
+            </PurchaseLockOverlay>
           </div>
         ) : (
           /* Questions - accessible */

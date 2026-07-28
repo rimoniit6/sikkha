@@ -2,7 +2,7 @@
 
 import BookmarkButton from '@/components/shared/BookmarkButton'
 import NoteEditor from '@/components/shared/NoteEditor'
-import PremiumLock from '@/components/shared/PremiumLock'
+import PurchaseLockOverlay from '@/components/shared/PurchaseLockOverlay'
 import ReadingSettingsPanel from '@/components/lecture/ReadingSettingsPanel'
 import LocalNoteDrawer from '@/components/lecture/LocalNoteDrawer'
 import ImageLightbox from '@/components/lecture/ImageLightbox'
@@ -820,7 +820,7 @@ export default function LectureViewerPage() {
 
             {/* Premium Content Check */}
             {isLocked ? (
-              <PremiumLock
+              <PurchaseLockOverlay
                 purchased={paymentStatus.purchased}
                 pendingPayment={paymentStatus.pendingPayment}
                 rejected={paymentStatus.rejected}
@@ -845,17 +845,17 @@ export default function LectureViewerPage() {
                 <div className="blur-md pointer-events-none select-none opacity-50">
                   {renderContent()}
                 </div>
-              </PremiumLock>
+              </PurchaseLockOverlay>
             ) : (
               <>
                 {/* কেনা Badge wrapper for purchased premium content */}
                 {isPremiumContent && paymentStatus.purchased && (
-                  <PremiumLock
+                  <PurchaseLockOverlay
                     purchased={true}
                     onUpgrade={() => {}}
                   >
                     {renderContent()}
-                  </PremiumLock>
+                  </PurchaseLockOverlay>
                 )}
                 {/* Normal content - either free or premium user (but not already purchased) */}
                 {(!isPremiumContent || (isPremiumUser && !paymentStatus.purchased)) && renderContent()}

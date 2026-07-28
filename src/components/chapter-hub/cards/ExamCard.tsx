@@ -5,8 +5,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import type { ExamItem } from '@/hooks/use-chapter-content'
 import { cn, toBengaliNumerals } from '@/lib/utils'
 import { Clock, FileQuestion, Play } from 'lucide-react'
-import PremiumBadge from '@/components/shared/PremiumBadge'
-import type { AccessStatus } from '@/components/shared/PremiumBadge'
+import { PurchaseStatusBadge } from '@/components/shared/PurchaseStatusBadge'
+import type { AccessStatus } from '@/components/shared/PurchaseStatusBadge'
 
 interface ExamCardProps {
   exam: ExamItem
@@ -43,7 +43,7 @@ export function ExamCard({ exam, index, isPurchased = false, pendingPayment = fa
                 <span className="text-[10px] px-1.5 py-0 rounded bg-muted text-muted-foreground uppercase font-medium">
                   {exam.type}
                 </span>
-                <PremiumBadge state={accessStatus} size="sm" />
+                <PurchaseStatusBadge state={accessStatus} size="sm" />
               </div>
               <h4 className="font-medium text-sm sm:text-base truncate">{exam.title}</h4>
               <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">

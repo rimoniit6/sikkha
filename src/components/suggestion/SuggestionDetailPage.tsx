@@ -2,8 +2,8 @@
 
 import { useEffect,useState } from 'react'
 
-import PremiumBadge from '@/components/shared/PremiumBadge'
-import PremiumLock from '@/components/shared/PremiumLock'
+import { PurchaseStatusBadge } from '@/components/shared/PurchaseStatusBadge'
+import PurchaseLockOverlay from '@/components/shared/PurchaseLockOverlay'
 import PurchaseOptionsModal from '@/components/shared/PurchaseOptionsModal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -209,7 +209,7 @@ export default function SuggestionDetailPage() {
             </div>
           </div>
           {isPremiumContent && !paymentStatus.purchased && !isPremiumUser && (
-            <PremiumBadge size="sm" />
+            <PurchaseStatusBadge size="sm" />
           )}
         </div>
       </div>
@@ -379,7 +379,7 @@ export default function SuggestionDetailPage() {
         {/* Content Section */}
         <div className="animate-fade-in-up delay-150">
           {isLocked ? (
-            <PremiumLock
+            <PurchaseLockOverlay
               purchased={paymentStatus.purchased}
               pendingPayment={paymentStatus.pendingPayment}
               rejected={paymentStatus.rejected}
@@ -406,7 +406,7 @@ export default function SuggestionDetailPage() {
                   <ContentBlockEditor blocks={blocks} onChange={() => {}} previewMode />
                 </div>
               )}
-            </PremiumLock>
+            </PurchaseLockOverlay>
           ) : blocks.length > 0 ? (
             <div className="prose prose-sm dark:prose-invert max-w-none">
               <ContentBlockEditor blocks={blocks} onChange={() => {}} previewMode />
