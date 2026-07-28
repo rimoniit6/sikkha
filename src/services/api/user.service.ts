@@ -1,4 +1,5 @@
 import { api } from '@/lib/api-client'
+import { triggerDownload } from '@/lib/dom-utils'
 
 export interface UserRecord {
   id: string
@@ -62,12 +63,7 @@ export const userService = {
 
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `users-${new Date().toISOString().split('T')[0]}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
+    triggerDownload(url, `users-${new Date().toISOString().split('T')[0]}.csv`)
     URL.revokeObjectURL(url)
   },
 }

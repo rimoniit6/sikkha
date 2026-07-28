@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { RotateCcw, Copy, Edit3, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { slugPreviewPath } from '@/lib/slug'
+import { copyToClipboardFallback } from '@/lib/dom-utils'
 
 interface SlugFieldProps {
   /** Current slug value */
@@ -74,12 +75,7 @@ export default function SlugField({
       setTimeout(() => setCopied(false), 2000)
     } catch {
       // Fallback for older browsers
-      const textarea = document.createElement('textarea')
-      textarea.value = fullPreviewUrl
-      document.body.appendChild(textarea)
-      textarea.select()
-      document.execCommand('copy')
-      document.body.removeChild(textarea)
+      copyToClipboardFallback(fullPreviewUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     }

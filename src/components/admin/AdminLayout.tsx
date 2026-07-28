@@ -44,6 +44,9 @@ import {
   Activity,
   History,
   Newspaper,
+  Cpu,
+  Radio,
+  Shield,
 } from 'lucide-react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useRouterStore, RoutePath, isAdminRoute } from '@/store/router'
@@ -149,6 +152,58 @@ const AdminPages = {
   'admin-analytics-geo': lazy(() => import('@/components/analytics/AnalyticsPage')),
   'admin-analytics-realtime': lazy(() => import('@/components/analytics/AnalyticsPage')),
   'admin-analytics-reports': lazy(() => import('@/components/analytics/AnalyticsPage')),
+
+  // Automation — Dashboard (v2)
+  'admin-automation': lazy(() => import('@/features/automation-v2/pages/AutomationDashboardPage')),
+
+  // Automation — Sources (v2 — inline dialog, no separate editor)
+  'admin-automation-sources': lazy(() => import('@/features/automation-v2/pages/SourceListPage')),
+  'admin-automation-source-editor': lazy(() => import('@/features/automation-v2/pages/SourceListPage')),
+
+  // Automation — Providers (v2)
+  'admin-automation-providers': lazy(() => import('@/features/automation-v2/pages/ProviderListPage')),
+
+  // Automation — Content workspace (v2 — all content sub-routes load the same workspace)
+  'admin-automation-content': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-content-templates': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-content-template-editor': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-content-pipelines': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-content-pipeline-detail': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-content-review': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-content-schedules': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+
+  // Automation — Blog (backward compat — loads v2 ContentWorkspace)
+  'admin-automation-blog': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-blog-templates': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-blog-template-editor': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-blog-pipelines': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-blog-pipeline-detail': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-blog-review': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-blog-schedules': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+
+  // Automation — Settings (v2 — single page, no separate rules/logs)
+  'admin-automation-settings': lazy(() => import('@/features/automation-v2/pages/AutomationSettingsPage')),
+  'admin-automation-settings-rules': lazy(() => import('@/features/automation-v2/pages/AutomationSettingsPage')),
+  'admin-automation-settings-rule-editor': lazy(() => import('@/features/automation-v2/pages/AutomationSettingsPage')),
+  'admin-automation-settings-logs': lazy(() => import('@/features/automation-v2/pages/AutomationSettingsPage')),
+
+  // Automation — Legacy aliases (backward compat — point to v2 pages)
+  'admin-automation-templates': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-template-editor': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-pipelines': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-pipeline-detail': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-rules': lazy(() => import('@/features/automation-v2/pages/AutomationSettingsPage')),
+  'admin-automation-rule-editor': lazy(() => import('@/features/automation-v2/pages/AutomationSettingsPage')),
+  'admin-automation-logs': lazy(() => import('@/features/automation-v2/pages/AutomationSettingsPage')),
+  'admin-automation-review': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-schedules': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+
+  // Automation v2 — direct routes (keep for /admin/automation-v2/* URL access)
+  'admin-automation-v2': lazy(() => import('@/features/automation-v2/pages/AutomationDashboardPage')),
+  'admin-automation-v2-sources': lazy(() => import('@/features/automation-v2/pages/SourceListPage')),
+  'admin-automation-v2-providers': lazy(() => import('@/features/automation-v2/pages/ProviderListPage')),
+  'admin-automation-v2-content': lazy(() => import('@/features/automation-v2/pages/ContentWorkspace')),
+  'admin-automation-v2-settings': lazy(() => import('@/features/automation-v2/pages/AutomationSettingsPage')),
 }
 
 const GROUPS = {
@@ -161,10 +216,11 @@ const GROUPS = {
   RESULTS: 'ফলাফল ও ক্রয়',
   FINANCIAL: 'আর্থিক',
   CMS: 'সিএমএস',
+  AUTOMATION: 'অটোমেশন',
   SETTINGS: 'সেটিংস',
 } as const
 
-const GROUP_ORDER = [GROUPS.MAIN, GROUPS.CONTENT, GROUPS.QUESTIONS, GROUPS.EDUCATION, GROUPS.EXAMS, GROUPS.RESULTS, GROUPS.FINANCIAL, GROUPS.CMS, GROUPS.SETTINGS, GROUPS.ANALYTICS]
+const GROUP_ORDER = [GROUPS.MAIN, GROUPS.CONTENT, GROUPS.QUESTIONS, GROUPS.EDUCATION, GROUPS.EXAMS, GROUPS.RESULTS, GROUPS.FINANCIAL, GROUPS.CMS, GROUPS.AUTOMATION, GROUPS.SETTINGS, GROUPS.ANALYTICS]
 
 interface SidebarItem {
   label: string
@@ -215,6 +271,21 @@ const sidebarItems: SidebarItem[] = [
   { label: 'অডিট লগ', icon: Activity, route: 'admin-audit-logs', group: GROUPS.SETTINGS },
   { label: 'ভার্সন হিস্ট্রি', icon: History, route: 'admin-version-history', group: GROUPS.SETTINGS },
 
+  // Automation — Dashboard
+  { label: 'ড্যাশবোর্ড', icon: Cpu, route: 'admin-automation', group: GROUPS.AUTOMATION },
+
+  // Automation — Sources
+  { label: 'সোর্স', icon: Radio, route: 'admin-automation-sources', group: GROUPS.AUTOMATION },
+
+  // Automation — Providers
+  { label: 'প্রোভাইডার', icon: Shield, route: 'admin-automation-providers', group: GROUPS.AUTOMATION },
+
+  // Automation — Content (single entry — templates, pipelines, review, schedules inside)
+  { label: 'কন্টেন্ট', icon: Newspaper, route: 'admin-automation-content', group: GROUPS.AUTOMATION },
+
+  // Automation — Settings (single entry — rules, logs inside)
+  { label: 'সেটিংস', icon: Settings, route: 'admin-automation-settings', group: GROUPS.AUTOMATION },
+
   // Analytics (single entry — all tabs inside)
   { label: 'বিশ্লেষণ', icon: BarChart3, route: 'admin-analytics', group: GROUPS.ANALYTICS },
 ]
@@ -243,6 +314,14 @@ function SidebarContent({
     if (current === sidebarRoute) return true
     // Blog: admin-blog also matches admin-blog-editor, admin-blog-categories, admin-blog-tags
     if (sidebarRoute === 'admin-blog' && current.startsWith('admin-blog')) return true
+    // Automation: parent items highlight when any sub-route is active
+    // Content parent matches all admin-automation-content-* sub-routes (+ backward-compat blog-*)
+    if (sidebarRoute === 'admin-automation-content' && (current.startsWith('admin-automation-content-') || current.startsWith('admin-automation-blog-'))) return true
+    // Settings parent matches all admin-automation-settings-* sub-routes
+    if (sidebarRoute === 'admin-automation-settings' && current.startsWith('admin-automation-settings-')) return true
+    // Sources parent matches source-editor
+    if (sidebarRoute === 'admin-automation-sources' && current === 'admin-automation-source-editor') return true
+
     return false
   }, [])
 

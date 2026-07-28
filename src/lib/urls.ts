@@ -112,6 +112,58 @@ const ROUTE_DEFS: Record<RoutePath, RouteDef> = {
   'admin-blog-editor': { path: '/admin/blog/editor', queryParams: ['postId'] },
   'admin-blog-categories': { path: '/admin/blog/categories', queryParams: [] },
   'admin-blog-tags': { path: '/admin/blog/tags', queryParams: [] },
+
+  // Automation — Dashboard
+  'admin-automation': { path: '/admin/automation', queryParams: [] },
+
+  // Automation — Sources
+  'admin-automation-sources': { path: '/admin/automation/sources', queryParams: [] },
+  'admin-automation-source-editor': { path: '/admin/automation/sources/editor', queryParams: [] },
+
+  // Automation — Providers
+  'admin-automation-providers': { path: '/admin/automation/providers', queryParams: [] },
+
+  // Automation — Content (canonical routes)
+  'admin-automation-content': { path: '/admin/automation/content', queryParams: ['tab'] },
+  'admin-automation-content-templates': { path: '/admin/automation/content/templates', queryParams: [] },
+  'admin-automation-content-template-editor': { path: '/admin/automation/content/templates/editor', queryParams: [] },
+  'admin-automation-content-pipelines': { path: '/admin/automation/content/pipelines', queryParams: [] },
+  'admin-automation-content-pipeline-detail': { path: '/admin/automation/content/pipelines/{pipelineId}', queryParams: [] },
+  'admin-automation-content-review': { path: '/admin/automation/content/review', queryParams: [] },
+  'admin-automation-content-schedules': { path: '/admin/automation/content/schedules', queryParams: [] },
+
+  // Automation — Blog (backward-compat aliases — same paths as content routes above)
+  'admin-automation-blog': { path: '/admin/automation/blog', queryParams: ['tab'] },
+  'admin-automation-blog-templates': { path: '/admin/automation/blog/templates', queryParams: [] },
+  'admin-automation-blog-template-editor': { path: '/admin/automation/blog/templates/editor', queryParams: [] },
+  'admin-automation-blog-pipelines': { path: '/admin/automation/blog/pipelines', queryParams: [] },
+  'admin-automation-blog-pipeline-detail': { path: '/admin/automation/blog/pipelines/{pipelineId}', queryParams: [] },
+  'admin-automation-blog-review': { path: '/admin/automation/blog/review', queryParams: [] },
+  'admin-automation-blog-schedules': { path: '/admin/automation/blog/schedules', queryParams: [] },
+
+  // Automation — Settings
+  'admin-automation-settings': { path: '/admin/automation/settings', queryParams: [] },
+  'admin-automation-settings-rules': { path: '/admin/automation/settings/rules', queryParams: [] },
+  'admin-automation-settings-rule-editor': { path: '/admin/automation/settings/rules/editor', queryParams: [] },
+  'admin-automation-settings-logs': { path: '/admin/automation/settings/logs', queryParams: [] },
+
+  // Automation v2 — parallel routes alongside old /admin/automation/*
+  'admin-automation-v2': { path: '/admin/automation-v2', queryParams: [] },
+  'admin-automation-v2-sources': { path: '/admin/automation-v2/sources', queryParams: [] },
+  'admin-automation-v2-providers': { path: '/admin/automation-v2/providers', queryParams: [] },
+  'admin-automation-v2-content': { path: '/admin/automation-v2/content', queryParams: ['tab'] },
+  'admin-automation-v2-settings': { path: '/admin/automation-v2/settings', queryParams: [] },
+
+  // Automation — Legacy aliases (backward compat — same URLs, different route names)
+  'admin-automation-templates': { path: '/admin/automation/blog/templates', queryParams: [] },
+  'admin-automation-template-editor': { path: '/admin/automation/blog/templates/editor', queryParams: [] },
+  'admin-automation-pipelines': { path: '/admin/automation/blog/pipelines', queryParams: [] },
+  'admin-automation-pipeline-detail': { path: '/admin/automation/blog/pipelines/{pipelineId}', queryParams: [] },
+  'admin-automation-rules': { path: '/admin/automation/settings/rules', queryParams: [] },
+  'admin-automation-rule-editor': { path: '/admin/automation/settings/rules/editor', queryParams: [] },
+  'admin-automation-logs': { path: '/admin/automation/settings/logs', queryParams: [] },
+  'admin-automation-review': { path: '/admin/automation/blog/review', queryParams: [] },
+  'admin-automation-schedules': { path: '/admin/automation/blog/schedules', queryParams: [] },
 }
 
 const PARAM_REGEX = /\{(\w+)\}/g

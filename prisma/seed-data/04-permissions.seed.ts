@@ -38,6 +38,18 @@ const ALL_PERMISSIONS = [
   { name: 'feedback.manage', description: 'Manage user feedback', group: 'feedback' },
   { name: 'contact.view', description: 'View contact messages', group: 'contact' },
   { name: 'trash.manage', description: 'Manage trash/restore', group: 'system' },
+
+  // Automation permissions
+  { name: 'automation.manage', description: 'Full automation management', group: 'automation' },
+  { name: 'automation.sources', description: 'Manage content sources', group: 'automation' },
+  { name: 'automation.providers', description: 'Manage AI providers', group: 'automation' },
+  { name: 'automation.prompts', description: 'Manage prompt templates', group: 'automation' },
+  { name: 'automation.pipelines', description: 'View and manage pipelines', group: 'automation' },
+  { name: 'automation.rules', description: 'Manage automation rules', group: 'automation' },
+  { name: 'automation.review', description: 'Review automation content', group: 'automation' },
+  { name: 'automation.publish', description: 'Auto-publish content', group: 'automation' },
+  { name: 'automation.settings', description: 'Manage automation settings', group: 'automation' },
+  { name: 'automation.logs', description: 'View automation logs', group: 'automation' },
 ]
 
 const ADMIN_PERMISSIONS = [
@@ -48,6 +60,11 @@ const ADMIN_PERMISSIONS = [
   'exam.manage', 'exam.create', 'exam.grade', 'exam.retake',
   'analytics.view',
   'feedback.manage', 'contact.view', 'notifications.send', 'trash.manage', 'system.navigation', 'system.featured',
+
+  // Automation
+  'automation.manage', 'automation.sources', 'automation.providers', 'automation.prompts',
+  'automation.pipelines', 'automation.rules', 'automation.review', 'automation.publish',
+  'automation.settings', 'automation.logs',
 ]
 
 export async function seedPermissions(db: PrismaClient) {

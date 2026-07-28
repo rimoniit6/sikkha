@@ -162,12 +162,32 @@ export function parsePaginationParams(searchParams: URLSearchParams): { page: nu
   return { page, limit }
 }
 
+export async function assertCsrf(request: Request): Promise<NextResponse | null> {
+  const csrfCheck = await withCsrf(request)
+  if ('error' in csrfCheck) return csrfCheck.error
+  return null
+}
+
 export async function withCsrf(request: Request): Promise<{ valid: true } | { error: NextResponse }> {
   if (request.method === 'GET' || request.method === 'HEAD') {
     return { valid: true as const }
   }
   const result = await csrfMiddleware(request)
   if (!result.valid) {
+    const hasHeader = !!request.headers.get('x-csrf-token')
+    let bodyHasCsrf = false
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+      const ct = request.headers.get('content-type')
+      if (ct?.includes('application/json')) {
+        try {
+          const body = await request.clone().json()
+          bodyHasCsrf = !!body._csrf
+        } catch { /* ignore */ }
+      }
+    }
+    if (!hasHeader && !bodyHasCsrf) {
+      return { error: apiError('CSRF টোকেন প্রদান করা হয়নি। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।', 403, 'CSRF_MISSING') }
+    }
     return { error: apiError('CSRF টোকেন বৈধ নয়। পেজ রিফ্রেশ করে আবার চেষ্টা করুন।', 403, 'CSRF_INVALID') }
   }
   return { valid: true as const }

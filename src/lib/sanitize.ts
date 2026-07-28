@@ -8,6 +8,7 @@
  */
 
 import DOMPurify from 'isomorphic-dompurify'
+import { sanitizeCss } from '@/lib/css-sanitizer'
 
 // ─── Allowed Tags ─────────────────────────────────────────────────
 // These are the ONLY HTML tags that will survive sanitization.
@@ -60,12 +61,63 @@ const ALLOWED_TAGS: string[] = [
   'wbr',
 ]
 
+// ─── Safe CSS Properties whitelist (for inline style attributes) ──
+// Only these CSS properties are allowed on the `style` attribute.
+// All other CSS properties (including dangerous ones like position:fixed)
+// are stripped by DOMPurify.
+
+const ALLOWED_STYLES: string[] = [
+  // ── Layout & Box Model ──
+  'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
+  'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+  'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+  'box-sizing', 'overflow',
+
+  // ── Display & Flex/Grid ──
+  'display',
+  'flex', 'flex-direction', 'flex-wrap', 'flex-grow', 'flex-shrink', 'flex-basis',
+  'align-items', 'align-content', 'align-self',
+  'justify-content', 'justify-items', 'justify-self',
+  'gap', 'row-gap', 'column-gap',
+  'grid', 'grid-template', 'grid-template-columns', 'grid-template-rows',
+  'grid-column', 'grid-row', 'grid-area',
+
+  // ── Typography ──
+  'color', 'font-size', 'font-family', 'font-weight', 'font-style',
+  'line-height', 'text-align', 'text-decoration', 'text-transform',
+  'letter-spacing', 'word-spacing', 'white-space',
+  'direction', 'unicode-bidi',
+
+  // ── Background ──
+  'background', 'background-color', 'background-image', 'background-size',
+  'background-position', 'background-repeat',
+
+  // ── Border & Outline ──
+  'border', 'border-top', 'border-right', 'border-bottom', 'border-left',
+  'border-color', 'border-style', 'border-width',
+  'border-radius', 'border-collapse', 'border-spacing',
+  'outline', 'outline-color', 'outline-style', 'outline-width',
+  'box-shadow',
+
+  // ── List ──
+  'list-style', 'list-style-type', 'list-style-position',
+
+  // ── Table ──
+  'vertical-align', 'table-layout',
+
+  // ── Misc Visual ──
+  'opacity', 'visibility', 'cursor',
+  'transform', 'transition', 'transition-property', 'transition-duration',
+  'transition-timing-function', 'transition-delay',
+]
+
 // ─── Allowed Attributes ──────────────────────────────────────────
 
 const ALLOWED_ATTR: string[] = [
   // ── Global ──
   'class', 'id', 'title', 'lang', 'dir',
   'role', 'aria-hidden', 'aria-label', 'aria-describedby',
+  'style',  // Safe inline CSS — filtered by ALLOWED_STYLES
 
   // ── Links ──
   'href', 'target', 'rel',
@@ -75,9 +127,7 @@ const ALLOWED_ATTR: string[] = [
 
   // ── Media ──
   'controls', 'autoplay', 'loop', 'muted', 'preload',
-  'allow', 'allowfullscreen', 'framebuffer', 'referrerpolicy',
-
-
+  'allow', 'allowfullscreen', 'frameborder', 'referrerpolicy',
 
   // ── Table ──
   'colspan', 'rowspan', 'scope', 'headers',
@@ -96,26 +146,59 @@ const ALLOWED_ATTR: string[] = [
 
   // ── KaTeX-specific (for rendered LaTeX output) ──
   'data-mathml',
+
+  // ── Safe educational data-* attributes (controlled allowlist) ──
+  // With ALLOW_DATA_ATTR: false, only these explicitly listed data-*
+  // attributes survive sanitization. All others (data-script,
+  // data-onclick, data-action, etc.) are automatically stripped.
+  'data-type',
+  'data-block',
+  'data-id',
+  'data-video-id',
+  'data-resource-id',
 ]
 
-// ─── Blocked Attributes (explicitly remove even if matched) ──────
+// ─── Helper: re-sanitize style attributes with CSS sanitizer ────
+// DOMPurify may pass through dangerous CSS values in style attributes.
+// This post-process pass applies our custom CSS sanitizer to every
+// `style` attribute in the HTML output.
 
-const _BLOCKED_ATTR_PATTERNS: RegExp[] = [
-  /^on/i,          // onclick, onerror, onload, etc.
-  /^formaction/i,  // formaction
-]
+function postProcessCss(html: string): string {
+  // Handle both double-quoted and single-quoted style attributes
+  let result = html.replace(
+    /style="([^"]*)"/gi,
+    (_match: string, styleValue: string) => {
+      const safe = sanitizeCss(styleValue)
+      if (!safe) return '' // Remove empty style attributes
+      return `style="${safe}"`
+    }
+  )
+  result = result.replace(
+    /style='([^']*)'/gi,
+    (_match: string, styleValue: string) => {
+      const safe = sanitizeCss(styleValue)
+      if (!safe) return ''
+      return `style="${safe}"` // Normalize to double quotes
+    }
+  )
+  return result
+}
 
 // ─── Server-side sanitizer (uses isomorphic-dompurify) ────
 
 function serverSanitize(html: string): string {
   try {
-    return DOMPurify.sanitize(html, {
+    let result = String(DOMPurify.sanitize(html, {
       ALLOWED_TAGS,
       ALLOWED_ATTR,
+      ALLOWED_STYLES,
       ALLOW_DATA_ATTR: false,
       ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|data|blob):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
       FORCE_BODY: true,
-    })
+    } as any))
+    // Apply CSS sanitizer post-process to strip dangerous CSS values
+    result = postProcessCss(result)
+    return result
   } catch {
     // Fallback: strip all HTML tags if DOMPurify fails
     return html.replace(/<[^>]*>/g, '')
@@ -139,13 +222,17 @@ function serverSanitize(html: string): string {
 export function sanitizeHtml(html: string): string {
   if (!html) return ''
   try {
-    return DOMPurify.sanitize(html, {
+    let result = String(DOMPurify.sanitize(html, {
       ALLOWED_TAGS,
       ALLOWED_ATTR,
+      ALLOWED_STYLES,
       ALLOW_DATA_ATTR: false,
       ALLOWED_URI_REGEXP: /^(?:(?:(?:f|ht)tps?|mailto|tel|data|blob):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
       FORCE_BODY: true,
-    })
+    } as any))
+    // Apply CSS sanitizer post-process to strip dangerous CSS values
+    result = postProcessCss(result)
+    return result
   } catch {
     return serverSanitize(html)
   }
@@ -195,4 +282,11 @@ export function getAllowedTags(): string[] {
  */
 export function getAllowedAttrs(): string[] {
   return [...ALLOWED_ATTR]
+}
+
+/**
+ * Get the list of allowed data-* attributes (for debugging/testing).
+ */
+export function getAllowedDataAttrs(): string[] {
+  return ALLOWED_ATTR.filter(a => a.startsWith('data-')).map(a => a)
 }

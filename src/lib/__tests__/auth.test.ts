@@ -239,12 +239,11 @@ describe('withCsrf', () => {
 
   it('rejects POST without CSRF token', async () => {
     cookieState.value = 'cookie-token'
-    mockVerify.mockRejectedValueOnce(new Error('invalid'))
     const request = new Request('http://localhost/api/test', { method: 'POST' })
     const result = await withCsrf(request)
     if ('error' in result) {
       const body = await result.error.json()
-      expect(body.code).toBe('CSRF_INVALID')
+      expect(body.code).toBe('CSRF_MISSING')
     } else {
       expect.fail('should fail CSRF')
     }

@@ -185,6 +185,12 @@ export function BlogBlockPreview({ block }: { block: BlogContentBlock }) {
       )
     case 'mindmap':
       return <BlogMindMapPreview data={block.data} title={block.title} />
+    case 'html':
+      return block.content ? (
+        <RichContentRenderer content={block.content} className="text-sm leading-relaxed" />
+      ) : (
+        <p className="text-sm text-muted-foreground italic">(HTML)</p>
+      )
     default:
       return null
   }

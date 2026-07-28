@@ -91,6 +91,18 @@ export const SOFT_DELETE_MODELS = new Set([
   'cqExamPackagePurchase',
   'blogPost',
   'blogCategory',
+  // Automation
+  'sourceConfig',
+  'pipelineRun',
+  'publishSchedule',
+  'aiProviderConfig',
+  'promptTemplate',
+  'promptVersion',
+  'automationRule',
+  'reviewTask',
+  'mediaAsset',
+  'importedContent',
+  'schedulerJob',
 ])
 
 export function isSoftDeleteModel(model: string): boolean {
@@ -122,6 +134,18 @@ export const PRISMA_MODEL_MAP: Record<string, string> = {
   cqExamRetakeRequest: 'cQExamRetakeRequest',
   blogPost: 'blogPost',
   blogCategory: 'blogCategory',
+  // Automation
+  sourceConfig: 'sourceConfig',
+  pipelineRun: 'pipelineRun',
+  publishSchedule: 'publishSchedule',
+  aiProviderConfig: 'aiProviderConfig',
+  promptTemplate: 'promptTemplate',
+  promptVersion: 'promptVersion',
+  automationRule: 'automationRule',
+  reviewTask: 'reviewTask',
+  mediaAsset: 'mediaAsset',
+  importedContent: 'importedContent',
+  schedulerJob: 'schedulerJob',
 }
 
 export function getPrismaModel(logicalName: string): string {

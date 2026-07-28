@@ -5,7 +5,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { sanitizeForStorage } from './sanitize'
 import { SOFT_DELETE_MODELS, PRISMA_MODEL_MAP } from './soft-delete'
 
-type ExtendedPrismaClient = ReturnType<typeof createPrismaClient>
+export type ExtendedPrismaClient = ReturnType<typeof createPrismaClient>
 
 // Build reverse map: Prisma accessor name → logical model name
 // Handles models like MCQ → mcq, CQ → cq, FAQ → faq where casing differs

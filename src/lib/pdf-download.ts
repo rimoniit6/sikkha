@@ -1,3 +1,5 @@
+import { triggerDownload } from '@/lib/dom-utils'
+
 /**
  * Download a PDF file via server-side proxy to bypass CORS restrictions.
  * The proxy fetches the PDF and serves it with Content-Disposition: attachment header.
@@ -23,15 +25,8 @@ export async function downloadPdf(url: string, filename: string = 'document.pdf'
     const blob = await response.blob()
     const blobUrl = URL.createObjectURL(blob)
 
-    // Create a temporary anchor element and trigger download
-    const link = document.createElement('a')
-    link.href = blobUrl
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-
-    // Cleanup
-    document.body.removeChild(link)
+    // Trigger download with safe cleanup
+    triggerDownload(blobUrl, filename)
     URL.revokeObjectURL(blobUrl)
   } catch (error) {
     console.error('PDF download error:', error)

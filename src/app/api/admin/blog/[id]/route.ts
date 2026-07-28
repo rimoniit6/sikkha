@@ -9,6 +9,7 @@ import { auditFromRequest, AuditActions } from '@/lib/audit'
 import { softDelete } from '@/lib/soft-delete'
 import { sanitizeForStorage } from '@/lib/sanitize'
 import { generateUniqueSlug } from '@/lib/slug-unique'
+import { validateAllHtmlBlocks } from '@/lib/html-validation'
 
 const updateBlogSchema = z.object({
   title: z.string().min(1, 'শিরোনাম আবশ্যক').optional(),
@@ -93,6 +94,19 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { tagIds, content, contentBlocks, publishedAt, scheduledAt, ...rest } = validated.data
 
+    // Validate HTML block sizes before saving
+    if (contentBlocks) {
+      try {
+        const blocks = JSON.parse(contentBlocks)
+        if (Array.isArray(blocks)) {
+          const blockErr = validateAllHtmlBlocks(blocks)
+          if (blockErr) return apiError(blockErr, 422)
+        }
+      } catch {
+        // Invalid JSON — let sanitizeForStorage handle it
+      }
+    }
+
     const data = await db.$transaction(async (tx) => {
       const updateData: Record<string, unknown> = {}
 
@@ -116,8 +130,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         updateData.slug = uniqueSlug
       }
 
+      // Auto-set publishedAt when publishing if not already set
       if (publishedAt !== undefined) {
         updateData.publishedAt = publishedAt ? new Date(publishedAt) : null
+      } else if (rest.status === 'PUBLISHED' && !existing.publishedAt) {
+        updateData.publishedAt = new Date()
       }
       if (scheduledAt !== undefined) {
         updateData.scheduledAt = scheduledAt ? new Date(scheduledAt) : null

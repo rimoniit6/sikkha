@@ -56,6 +56,8 @@ import {
   Undo2,
 } from 'lucide-react'
 import React, { useEffect, useRef, useState } from 'react'
+import { Textarea } from '@/components/ui/textarea'
+import { FileCode } from 'lucide-react'
 
 // ─── Toolbar Button ───
 
@@ -367,6 +369,7 @@ function RichTextBlockEditor({ block, onChange }: { block: ContentBlock & { type
   const [imageDialogOpen, setImageDialogOpen] = useState(false)
   const [linkDialogOpen, setLinkDialogOpen] = useState(false)
   const [linkUrl, setLinkUrl] = useState('')
+  const [htmlMode, setHtmlMode] = useState(false)
   const editorRef = useRef<any>(null)
 
   // Stable image upload for drag-and-drop and paste
@@ -615,6 +618,15 @@ function RichTextBlockEditor({ block, onChange }: { block: ContentBlock & { type
 
         <span className="w-px h-5 bg-border/40 mx-1" />
 
+        {/* HTML Source Mode Toggle */}
+        <span className="w-px h-5 bg-border/40 mx-1" />
+        <ToolbarButton
+          onClick={() => setHtmlMode(!htmlMode)}
+          active={htmlMode}
+          icon={FileCode}
+          title="HTML সোর্স"
+        />
+
         {/* History */}
         <ToolbarButton onClick={() => editor.chain().focus().undo().run()} icon={Undo2} title="পূর্বাবস্থা (Ctrl+Z)" />
         <ToolbarButton onClick={() => editor.chain().focus().redo().run()} icon={Redo2} title="পুনরায় (Ctrl+Y)" />
@@ -647,10 +659,29 @@ function RichTextBlockEditor({ block, onChange }: { block: ContentBlock & { type
         </div>
       )}
 
-      {/* Editor */}
-      <div className="rounded-xl border border-border/40 bg-card overflow-hidden focus-within:border-indigo-300/50 focus-within:ring-1 focus-within:ring-indigo-300/30 transition-all">
-        <EditorContent editor={editor} />
-      </div>
+      {htmlMode ? (
+        /* HTML Source Mode */
+        <div className="space-y-2">
+          <div className="flex items-center gap-1.5 text-[10px] text-amber-600 dark:text-amber-400">
+            <FileCode className="h-3 w-3" />
+            <span>HTML সোর্স মোড — সরাসরি HTML + CSS লিখুন</span>
+          </div>
+          <Textarea
+            value={block.content}
+            onChange={(e) => onChange({ ...block, content: e.target.value })}
+            rows={10}
+            className="font-mono text-sm border-0 bg-zinc-950 text-zinc-100 focus:bg-zinc-900 transition-colors rounded-xl resize-y min-h-[200px]"
+            spellCheck={false}
+          />
+          <div className="text-[10px] text-muted-foreground">
+            <span>HTML ভিজুয়াল মোডে ফিরতে <strong>HTML সোর্স</strong> বাটনে আবার ক্লিক করুন</span>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-border/40 bg-card overflow-hidden focus-within:border-indigo-300/50 focus-within:ring-1 focus-within:ring-indigo-300/30 transition-all">
+          <EditorContent editor={editor} />
+        </div>
+      )}
     </div>
   )
 }

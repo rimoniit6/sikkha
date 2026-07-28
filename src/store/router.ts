@@ -112,6 +112,58 @@ export type RoutePath =
   | 'admin-blog-categories'
   | 'admin-blog-tags'
 
+  // Automation — Dashboard
+  | 'admin-automation'
+
+  // Automation — Sources
+  | 'admin-automation-sources'
+  | 'admin-automation-source-editor'
+
+  // Automation — Providers
+  | 'admin-automation-providers'
+
+  // Automation — Content
+  | 'admin-automation-content'
+  | 'admin-automation-content-templates'
+  | 'admin-automation-content-template-editor'
+  | 'admin-automation-content-pipelines'
+  | 'admin-automation-content-pipeline-detail'
+  | 'admin-automation-content-review'
+  | 'admin-automation-content-schedules'
+
+  // Automation — Blog (backward compat)
+  | 'admin-automation-blog'
+  | 'admin-automation-blog-templates'
+  | 'admin-automation-blog-template-editor'
+  | 'admin-automation-blog-pipelines'
+  | 'admin-automation-blog-pipeline-detail'
+  | 'admin-automation-blog-review'
+  | 'admin-automation-blog-schedules'
+
+  // Automation — Settings
+  | 'admin-automation-settings'
+  | 'admin-automation-settings-rules'
+  | 'admin-automation-settings-rule-editor'
+  | 'admin-automation-settings-logs'
+
+  // Automation v2 — parallel routes alongside old /admin/automation/*
+  | 'admin-automation-v2'
+  | 'admin-automation-v2-sources'
+  | 'admin-automation-v2-providers'
+  | 'admin-automation-v2-content'
+  | 'admin-automation-v2-settings'
+
+  // Automation — Legacy aliases (backward compat — redirect to new routes)
+  | 'admin-automation-templates'
+  | 'admin-automation-template-editor'
+  | 'admin-automation-pipelines'
+  | 'admin-automation-pipeline-detail'
+  | 'admin-automation-rules'
+  | 'admin-automation-rule-editor'
+  | 'admin-automation-logs'
+  | 'admin-automation-review'
+  | 'admin-automation-schedules'
+
 // Single source of truth for admin routes — used by AppShell, page.tsx, and AdminLayout
 export const ADMIN_ROUTES: Set<RoutePath> = new Set([
   'admin-dashboard',
@@ -172,6 +224,58 @@ export const ADMIN_ROUTES: Set<RoutePath> = new Set([
   'admin-blog-editor',
   'admin-blog-categories',
   'admin-blog-tags',
+
+  // Automation — Dashboard
+  'admin-automation',
+
+  // Automation — Sources
+  'admin-automation-sources',
+  'admin-automation-source-editor',
+
+  // Automation — Providers
+  'admin-automation-providers',
+
+  // Automation — Content
+  'admin-automation-content',
+  'admin-automation-content-templates',
+  'admin-automation-content-template-editor',
+  'admin-automation-content-pipelines',
+  'admin-automation-content-pipeline-detail',
+  'admin-automation-content-review',
+  'admin-automation-content-schedules',
+
+  // Automation — Blog (backward compat)
+  'admin-automation-blog',
+  'admin-automation-blog-templates',
+  'admin-automation-blog-template-editor',
+  'admin-automation-blog-pipelines',
+  'admin-automation-blog-pipeline-detail',
+  'admin-automation-blog-review',
+  'admin-automation-blog-schedules',
+
+  // Automation — Settings
+  'admin-automation-settings',
+  'admin-automation-settings-rules',
+  'admin-automation-settings-rule-editor',
+  'admin-automation-settings-logs',
+
+  // Automation v2 — parallel routes
+  'admin-automation-v2',
+  'admin-automation-v2-sources',
+  'admin-automation-v2-providers',
+  'admin-automation-v2-content',
+  'admin-automation-v2-settings',
+
+  // Automation — Legacy (keep for backward compat)
+  'admin-automation-templates',
+  'admin-automation-template-editor',
+  'admin-automation-pipelines',
+  'admin-automation-pipeline-detail',
+  'admin-automation-rules',
+  'admin-automation-rule-editor',
+  'admin-automation-logs',
+  'admin-automation-review',
+  'admin-automation-schedules',
 ])
 
 export function isAdminRoute(route: RoutePath): boolean {
@@ -213,6 +317,14 @@ export interface RouteParams {
   startSetId?: string // Auto-start a specific exam set on mount
   courseSlug?: string // For course detail page
   postId?: string // For blog editor
+  // Automation params
+  sourceId?: string
+  providerId?: string
+  templateId?: string
+  ruleId?: string
+  pipelineId?: string
+  // Content workspace tab
+  tab?: string
 }
 
 export interface RouterState {

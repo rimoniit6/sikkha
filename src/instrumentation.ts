@@ -1,29 +1,20 @@
-import logger from '@/lib/logger'
+/**
+ * Next.js Instrumentation Hook
+ *
+ * This file runs during server startup in both Edge and Node runtimes.
+ * The `process.env.NEXT_RUNTIME !== 'nodejs'` guard ensures that
+ * Node.js-specific APIs (process.on, process.exit, process handlers)
+ * are never accessed in Edge Runtime — they are extracted to
+ * `@/lib/node-instrumentation.ts` which is only imported dynamically
+ * within the guarded block.
+ */
 
 export async function register() {
+  // Edge Runtime guard — return early before importing any Node.js code
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
 
-  const { registerProcessHandlers } = await import(
-    '@/lib/process-handlers.node'
-  )
-  registerProcessHandlers()
-
-  logger.info('Application starting', {
-    context: 'instrumentation',
-    nodeEnv: process.env.NODE_ENV,
-  })
-
-  // Seed super admin
-  try {
-    const { db } = await import('@/lib/db')
-    const { ensureSuperAdmin } = await import('@/lib/seed-super-admin')
-    await ensureSuperAdmin(db as unknown as import('@prisma/client').PrismaClient)
-    logger.info('Super admin seed completed', { context: 'instrumentation' })
-  } catch (err) {
-    logger.error('Super admin seed failed', err, { context: 'instrumentation' })
-  }
-
-  logger.info('Application ready', {
-    context: 'instrumentation',
-  })
+  // Delegate all Node.js initialization to the Node-only module
+  // This keeps process.on / process.exit out of the Edge module graph
+  const { initializeNodeRuntime } = await import('@/lib/node-instrumentation')
+  await initializeNodeRuntime()
 }

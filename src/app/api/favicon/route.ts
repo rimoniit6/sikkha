@@ -17,6 +17,9 @@ export async function GET(request: NextRequest) {
       // If it's an absolute URL, redirect to it
       return NextResponse.redirect(faviconUrl)
     }
+
+    // No custom favicon configured — redirect to the default favicon
+    return NextResponse.redirect(new URL('/favicon.ico', request.nextUrl.origin))
   } catch (error) {
     return handleApiError(error, 'Favicon API error:')
   }

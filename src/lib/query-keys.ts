@@ -78,6 +78,46 @@ export const queryKeys = {
     adminSubjects: (classId?: string) => ['admin', 'subjects', classId ?? 'all'] as const,
     adminChapters: (subjectId?: string) => ['admin', 'chapters', subjectId ?? 'all'] as const,
     workflowAnalytics: (params?: Record<string, unknown>) => ['admin', 'workflow', 'analytics', params] as const,
+    automation: {
+      // Dashboard
+      health: () => ['admin', 'automation', 'health'] as const,
+      stats: () => ['admin', 'automation', 'stats'] as const,
+
+      // Sources
+      sources: (params?: Record<string, unknown>) => ['admin', 'automation', 'sources', params] as const,
+      sourceDetail: (id: string) => ['admin', 'automation', 'sources', id] as const,
+
+      // Providers
+      providers: () => ['admin', 'automation', 'providers'] as const,
+      providerDetail: (id: string) => ['admin', 'automation', 'providers', id] as const,
+
+      // Content
+      content: {
+        templates: () => ['admin', 'automation', 'content', 'templates'] as const,
+        templateDetail: (id: string) => ['admin', 'automation', 'content', 'templates', id] as const,
+        pipelines: (params?: Record<string, unknown>) => ['admin', 'automation', 'content', 'pipelines', params] as const,
+        pipelineDetail: (id: string) => ['admin', 'automation', 'content', 'pipelines', id] as const,
+        reviewTasks: (params?: Record<string, unknown>) => ['admin', 'automation', 'content', 'review', params] as const,
+        schedules: () => ['admin', 'automation', 'content', 'schedules'] as const,
+      },
+      // Blog (backward compat — same query keys as content)
+      blog: {
+        templates: () => ['admin', 'automation', 'blog', 'templates'] as const,
+        templateDetail: (id: string) => ['admin', 'automation', 'blog', 'templates', id] as const,
+        pipelines: (params?: Record<string, unknown>) => ['admin', 'automation', 'blog', 'pipelines', params] as const,
+        pipelineDetail: (id: string) => ['admin', 'automation', 'blog', 'pipelines', id] as const,
+        reviewTasks: (params?: Record<string, unknown>) => ['admin', 'automation', 'blog', 'review', params] as const,
+        schedules: () => ['admin', 'automation', 'blog', 'schedules'] as const,
+      },
+
+      // Settings
+      settings: {
+        rules: () => ['admin', 'automation', 'settings', 'rules'] as const,
+        ruleDetail: (id: string) => ['admin', 'automation', 'settings', 'rules', id] as const,
+        logs: (params?: Record<string, unknown>) => ['admin', 'automation', 'settings', 'logs', params] as const,
+        general: () => ['admin', 'automation', 'settings', 'general'] as const,
+      },
+    },
   },
   examPackages: {
     mcq: (params?: Record<string, unknown>) => ['mcq-exam-packages', params] as const,

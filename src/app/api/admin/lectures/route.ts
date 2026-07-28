@@ -8,6 +8,8 @@ import { z } from 'zod'
 import { auditFromRequest, AuditActions, EntityTypes, getClientIP } from '@/lib/audit'
 import { guardDeleteDependencies } from '@/lib/delete-guard'
 import { transitionWorkflow } from '@/lib/workflow'
+import { sanitizeForStorage } from '@/lib/sanitize'
+import { validateAllHtmlBlocks } from '@/lib/html-validation'
 
 const createLectureSchema = z.object({
   title: z.string().min(1, 'শিরোনাম আবশ্যক'),
@@ -101,14 +103,23 @@ export async function POST(request: Request) {
     const body = await request.json()
     const validated = validateBody(createLectureSchema, body)
     if ('error' in validated) return validated.error
-    const { data: fields } = validated
+    const { data: fields } = validated      // Validate HTML block sizes before saving
+    try {
+      const blocks = JSON.parse(fields.content)
+      if (Array.isArray(blocks)) {
+        const blockErr = validateAllHtmlBlocks(blocks)
+        if (blockErr) return apiError(blockErr, 422)
+      }
+    } catch {
+      // Not block JSON content — let sanitizeForStorage handle it
+    }
 
     const lectureSlug = fields.slug || fields.title.toLowerCase().replace(/[^a-z0-9\u0980-\u09FF]+/g, '-').replace(/^-|-$/g, '')
 
     const data = await db.$transaction(async (tx) => {
       const created = await tx.lecture.create({
         data: {
-          title: fields.title, slug: lectureSlug, chapterId: fields.chapterId, content: fields.content,
+          title: fields.title, slug: lectureSlug, chapterId: fields.chapterId, content: sanitizeForStorage(fields.content),
           videoUrl: fields.videoUrl || null, audioUrl: fields.audioUrl || null, pdfUrl: fields.pdfUrl || null,
           thumbnail: fields.thumbnail || null, duration: fields.duration ?? 0, order: fields.order ?? 0,
           isPremium: deriveIsPremium(fields.price), price: fields.price ?? 0, isActive: fields.isActive ?? true,
@@ -153,7 +164,22 @@ export async function PUT(request: Request) {
 
     for (const field of allowedFields) {
       if (updateData[field] !== undefined) {
-        updateFields[field] = updateData[field]
+        // Sanitize HTML content before storage
+        if (field === 'content') {
+          // Validate HTML block sizes before sanitizing
+          try {
+            const blocks = JSON.parse(updateData[field])
+            if (Array.isArray(blocks)) {
+              const blockErr = validateAllHtmlBlocks(blocks)
+              if (blockErr) return apiError(blockErr, 422)
+            }
+          } catch {
+            // Not block JSON content — let sanitizeForStorage handle it
+          }
+          updateFields[field] = sanitizeForStorage(updateData[field])
+        } else {
+          updateFields[field] = updateData[field]
+        }
       }
     }
 

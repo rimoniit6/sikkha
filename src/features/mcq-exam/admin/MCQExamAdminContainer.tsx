@@ -7,6 +7,7 @@ AlertDialogDescription,AlertDialogFooter,AlertDialogHeader,AlertDialogTitle,
 import { useHierarchyMetadata } from '@/hooks/use-hierarchy-metadata'
 import { AnimatePresence,motion } from 'framer-motion'
 import { AlertTriangle } from 'lucide-react'
+import { triggerDownload } from '@/lib/dom-utils'
 import { useMCQExamPackages } from './hooks/use-mcq-exam-packages'
 
 // Sub-components
@@ -272,13 +273,8 @@ export default function AdminMCQExamPackagesPage() {
             if (res.ok) {
               const blob = await res.blob()
               const url = window.URL.createObjectURL(blob)
-              const a = document.createElement('a')
-              a.href = url
-              a.download = 'mcq-exam-set-template.xlsx'
-              document.body.appendChild(a)
-              a.click()
+              triggerDownload(url, 'mcq-exam-set-template.xlsx')
               window.URL.revokeObjectURL(url)
-              document.body.removeChild(a)
             }
           } catch {
             // handle error

@@ -11,6 +11,7 @@ import {
 } from './content-block-types'
 import { DataBlockEditor } from './DataBlockEditor'
 import { MindMapBlockEditor, MindMapPreview } from './MindMapBlockEditor'
+import { HtmlBlockEditor } from './HtmlBlockEditor'
 import { RichTextBlockEditor } from './RichTextBlockEditor'
 import { Badge } from '@/components/ui/badge'
 import ImageUploader from '@/components/ui/image-uploader'
@@ -405,6 +406,8 @@ function BlockPreview({ block }: { block: ContentBlock }) {
       )
     case 'mindmap':
       return <MindMapPreview data={block.data} title={block.title} />
+    case 'html':
+      return <RichContentRenderer content={block.content} className="text-sm leading-relaxed" />
     default:
       return null
   }
@@ -545,6 +548,7 @@ const BlockItem = memo(function BlockItem({
             {block.type === 'link' && <LinkBlockEditor block={block} onChange={handleChange} />}
             {block.type === 'richtext' && <RichTextBlockEditor block={block} onChange={handleChange} />}
             {block.type === 'mindmap' && <MindMapBlockEditor block={block} onChange={handleChange} />}
+            {block.type === 'html' && <HtmlBlockEditor block={block} onChange={handleChange} />}
             {block.type === 'divider' && (
               <div className="flex items-center gap-3 py-3">
                 <div className="flex-1 h-px bg-border/50" />

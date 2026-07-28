@@ -9,6 +9,7 @@ import { QueryError } from '@/components/admin/QueryError'
 import { useToast } from '@/hooks/use-toast'
 import { useSettings } from '@/hooks/admin/use-settings'
 import { settingsService } from '@/services/api/settings.service'
+import { triggerDownload } from '@/lib/dom-utils'
 import {
 AlertTriangle,
 CheckCircle2,
@@ -267,12 +268,7 @@ export default function AdminSettingsPage() {
         const data = await res.json()
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `database-backup-${new Date().toISOString().slice(0, 10)}.json`
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
+        triggerDownload(url, `database-backup-${new Date().toISOString().slice(0, 10)}.json`)
         URL.revokeObjectURL(url)
         toast({ title: 'এক্সপোর্ট সফল হয়েছে' })
       } else {

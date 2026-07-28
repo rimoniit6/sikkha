@@ -10,6 +10,7 @@ import {
   Sparkles,
   Table2,
   Type,
+  Code,
 } from 'lucide-react'
 import React from 'react'
 
@@ -27,6 +28,7 @@ export type BlogContentBlock =
   | { id: string; type: 'link'; url: string; label: string; description: string }
   | { id: string; type: 'richtext'; content: string }
   | { id: string; type: 'mindmap'; data: string; title: string }
+  | { id: string; type: 'html'; content: string }
 
 // ─── Mind Map Helpers ─────────────────────────────────────────
 
@@ -139,6 +141,8 @@ export function createBlogBlock(type: BlogContentBlock['type']): BlogContentBloc
       return { id: blogGenerateId(), type: 'richtext', content: '' }
     case 'mindmap':
       return { id: blogGenerateId(), type: 'mindmap', data: createDefaultBlogMindMap(), title: '' }
+    case 'html':
+      return { id: blogGenerateId(), type: 'html', content: '' }
     default:
       return { id: blogGenerateId(), type: 'text', content: '' }
   }
@@ -234,5 +238,13 @@ export const blogBlockTypeConfig: Record<string, { label: string; bnLabel: strin
     color: 'text-rose-600',
     bg: 'bg-rose-50 dark:bg-rose-950/30',
     description: 'মাইন্ড ম্যাপ বা ধারণা চিত্র',
+  },
+  html: {
+    label: 'HTML',
+    bnLabel: 'HTML',
+    icon: Code,
+    color: 'text-purple-600',
+    bg: 'bg-purple-50 dark:bg-purple-950/30',
+    description: 'কাস্টম HTML + CSS ডিজাইন',
   },
 }

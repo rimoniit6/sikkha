@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { apiResponse, withAdmin, validateBody, withCsrf, paginatedApiResponse } from '@/lib/api-utils'
+import { apiResponse, apiError, withAdmin, validateBody, withCsrf, paginatedApiResponse } from '@/lib/api-utils'
 import { handleApiError } from '@/lib/errors'
 import logger from '@/lib/logger'
 import { invalidateContentCache } from '@/lib/cache-invalidate'
@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { auditFromRequest, AuditActions } from '@/lib/audit'
 import { sanitizeForStorage } from '@/lib/sanitize'
 import { generateUniqueSlug } from '@/lib/slug-unique'
+import { validateAllHtmlBlocks } from '@/lib/html-validation'
 
 const createBlogSchema = z.object({
   title: z.string().min(1, 'শিরোনাম আবশ্যক'),
@@ -113,6 +114,19 @@ export async function POST(request: Request) {
     if ('error' in validated) return validated.error
 
     const { tagIds, content, contentBlocks, publishedAt, scheduledAt, ...rest } = validated.data
+
+    // Validate HTML block sizes before saving
+    if (contentBlocks) {
+      try {
+        const blocks = JSON.parse(contentBlocks)
+        if (Array.isArray(blocks)) {
+          const blockErr = validateAllHtmlBlocks(blocks)
+          if (blockErr) return apiError(blockErr, 422)
+        }
+      } catch {
+        // Invalid JSON — let sanitizeForStorage handle it
+      }
+    }
 
     const slug = rest.slug || generateSlug(rest.title)
     const readingTime = calculateReadingTime(content || '')

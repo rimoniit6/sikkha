@@ -14,6 +14,7 @@ import { BlogRichTextBlockEditor } from './BlogRichTextBlockEditor'
 import { BlogPdfBlockEditor } from './BlogPdfBlockEditor'
 import { BlogLinkBlockEditor } from './BlogLinkBlockEditor'
 import { BlogMindMapBlockEditor } from './BlogMindMapBlockEditor'
+import { BlogHtmlBlockEditor } from './BlogHtmlBlockEditor'
 import { cn } from '@/lib/utils'
 import {
   ChevronDown,
@@ -156,6 +157,7 @@ export const BlogBlockItem = memo(function BlogBlockItem({
             {block.type === 'link' && <BlogLinkBlockEditor block={block} onChange={handleChange} />}
             {block.type === 'richtext' && <BlogRichTextBlockEditor block={block} onChange={handleChange} />}
             {block.type === 'mindmap' && <BlogMindMapBlockEditor block={block} onChange={handleChange} />}
+            {block.type === 'html' && <BlogHtmlBlockEditor block={block} onChange={handleChange} />}
             {block.type === 'divider' && (
               <div className="flex items-center gap-3 py-3">
                 <div className="flex-1 h-px bg-border/50" />
